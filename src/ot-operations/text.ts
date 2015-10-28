@@ -105,15 +105,19 @@ module TextOperation {
     public execute(data: Array<string>) {
       if (this.isInsert()) {
         if (this.location() < 0) {
-          console.log('Can\'t  apply operation ' + this.toJson());
-          console.log('Target document is ' + data);
-          throw 'TextOperation::execute error; insert location is negative';
+          fail({
+            message: 'Insert location is negative',
+            operation: this,
+            document: data
+          });
         }
         
         if (this.location() > data.length) {
-          console.log('Can\'t  apply operation ' + this.toJson());
-          console.log('Target document is ' + data);
-          throw 'TextOperation::execute error; insert location is too large';
+          fail({
+            message: 'Insert location is too big',
+            operation: this,
+            document: data
+          });
         }
         
         data.splice(this._location, 0, this._char); 
@@ -121,20 +125,24 @@ module TextOperation {
       
       else if (this.isDelete()) {
         if (this.location() < 0) {
-          console.log('Can\'t  apply operation ' + this.toJson());
-          console.log('Target document is ' + data);
-          throw 'TextOperation::execute error; insert location is negative';
+          fail({
+            message: 'Delete location is negative',
+            operation: this,
+            document: data
+          });
         }
         
         if (this.location() > data.length - 1) {
-          console.log('Can\'t  apply operation ' + this.toJson());
-          console.log('Target document is ' + data);
-          throw 'TextOperation::execute error; insert location is too large';
+          fail({
+            message: 'Delete location is too big',
+            operation: this,
+            document: data
+          });
         }
         
         data.splice(this._location, 1);
       } else {
-        throw "Unhandled op type " + this.type();
+        fail('Unhandled op type ' + this.type());
       }
     }
 
@@ -144,7 +152,7 @@ module TextOperation {
 			var copy = this.clone();
       
       if (this.id() == other.id()) {
-        throw 'Operations have the same id!';
+        fail('Operations have the same id: ' + this.toJson() + other.toJson());
       }
       
       let locationRelation = this.compareLocation(other);
@@ -174,7 +182,7 @@ module TextOperation {
         }
 
       } else {
-        throw "Unrecognized operation types " + this.type() + " " + other.type();
+        fail("Unrecognized operation types " + this.type() + " " + other.type());
       }
     }
 	}

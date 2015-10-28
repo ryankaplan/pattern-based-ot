@@ -149,15 +149,14 @@ module OTDemoPage {
             this._textArea.val(newString);
         }
 
-        // Sends a message to the server. Returns false if sending failed
+        // Sends a message to the server. Throws if we failed to send.
         // e.g. if we haven't received our siteId yet.
-        sendMessage(message: string, data: any): boolean {
+        sendMessage(message: string, data: any) {
             if (this._siteId !== -1) {
                 this._socket.emit(message, data);
                 return true;
             }
-            throw "NOOO";
-            return false;
+            fail('Tried to send a message before we have our siteId');
         }
 
     }

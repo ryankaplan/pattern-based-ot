@@ -24,9 +24,7 @@ function processOps(ops: Array<TextOp>, model: Array<string>) {
 
 function assertEqual(a: any, b: any) {
   if (a != b) {
-    console.log("First value: ", a);
-    console.log("Second value:", b);
-    throw 'TEST FAILURE: Values are not equal';
+    throw new Error('TEST FAILURE: Values are not equal. Values are (' + a + ') and (' + b + ')');
   }
 }
 
