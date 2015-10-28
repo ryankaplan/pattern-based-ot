@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "out": "static/compiled/js/server.js",
+        "sourceMap": true
+    },
+    "files": [
+        "server.ts"
+    ]
+}

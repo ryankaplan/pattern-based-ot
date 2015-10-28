@@ -1,0 +1,33 @@
+html {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    height: 100%;
+
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 300;
+    text-align: center;
+
+    background-color: #EAF6F7;
+}
+
+.document {
+    height: 100%;
+    margin: 0 auto;
+    padding: 20px 20px;
+    text-align: left;
+    width: 640px;
+    background-color: white;
+    border: 1px solid rgb(224, 224, 224);
+    font-size: 14px;
+    color: #333;
+    box-shadow: 0px 0px 30px #A5A5A5;
+
+    /* Necessary so that textarea doesn't get a blue glow when focused */
+    outline: none;
+}

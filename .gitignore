@@ -1,0 +1,4 @@
+.idea/
+node_modules/
+static/compiled/
+.DS_Store
