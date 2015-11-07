@@ -3,7 +3,7 @@
 /// <reference path='../base/list.ts' />
 /// <reference path='../base/logging.ts' />
 
-var DEBUG = true;
+var DEBUG = false;
 function debug(...args: any[]): void {
 	if (DEBUG) {
 		return console.log && Function.apply.call(console.log, console, arguments);
@@ -58,18 +58,6 @@ class TextOp extends Operation {
 	isDelete() { return this._type == Type.DELETE; }
 	isInsert() { return this._type == Type.INSERT; }
 
-    private compareLocation(other: TextOp): ComparisonResult {
-		if (this.location() < other.location()) {
-			return ComparisonResult.LESS_THAN;
-		} else if (this.location() > other.location()) {
-			return ComparisonResult.GREATER_THAN;
-		} else {
-			// Fall back on comparing total ordering id
-			return Timestamp.compare(this.timestamp(), other.timestamp());
-		}
-    }
-
-
 	// Transform works for two operations a and b such that
 	//
 	// tA = a.transform(b)
@@ -77,7 +65,7 @@ class TextOp extends Operation {
 	//
 	// and applying a and then tB to a document has the same result
 	// as a applying b and then tA.
-	
+
 	transform(other_: Operation) {
 		let other = <TextOp>other_;
 		let copy = new TextOp(null, null, null);
@@ -95,12 +83,14 @@ class TextOp extends Operation {
 			debug('Other: ', other);
 		}
 
-		let locationRelation = this.compareLocation(other);
-		assert(locationRelation != ComparisonResult.EQUAL, 'Not possible since ids are different, as enforced above');
+		let locationRelation = compare(this.location(), other.location());
 
 		if (this.isInsert() && other.isInsert()) {
 			debug('Insert vs. Insert. locationRelation = ', locationRelation);
+
 			if (locationRelation == ComparisonResult.GREATER_THAN) {
+				copy._location += 1;
+			} else if (locationRelation == ComparisonResult.EQUAL && this._char > other._char) {
 				copy._location += 1;
 			}
 		}
@@ -108,42 +98,16 @@ class TextOp extends Operation {
 		else if (this.isDelete() && other.isInsert()) {
 			debug('Delete vs. Insert. locationRelation = ', locationRelation);
 
-			// delete then transformed insert:
-			//
-			// delete at 10
-			// insert at 9
-			//
-			// start : 2xxxxxyyyyyzzzzz
-			// delete: 2xxxxxyyyyzzzzz
-			// insert: 2xxxxxyyybyzzzzz
-			//
-
-			// insert then transformed delete:
-			//
-			// insert at 10
-			// need to delete at 11
-			//
-			//
-			// start : xxxxxyyyyyzzzzz
-			// delete:
-			// insert:
-
-			if (locationRelation == ComparisonResult.GREATER_THAN) {
-				// delete comes after insert
-
-			} else if (locationRelation == ComparisonResult.LESS_THAN) {
-
-			} else if (locationRelation == ComparisonResult.EQUAL) {
-				// Should never happen
-			}
-
-			if (locationRelation == ComparisonResult.GREATER_THAN) {
+			// Insert operations are applied before delete operations when there's a location tie
+			if (locationRelation == ComparisonResult.GREATER_THAN || locationRelation == ComparisonResult.EQUAL) {
 				copy._location += 1;
 			}
 		}
 
 		else if (this.isInsert() && other.isDelete()) {
 			debug('Insert vs. Delete. locationRelation = ', locationRelation);
+
+			// Insert operations are applied before delete operations when there's a location tie
 			if (locationRelation == ComparisonResult.GREATER_THAN) {
 				copy._location -= 1;
 			}
@@ -154,6 +118,8 @@ class TextOp extends Operation {
 			if (locationRelation == ComparisonResult.GREATER_THAN) {
 				copy._location -= 1;
 			}
+
+			// if the location is equal, these ops commute
 
 		} else {
 			fail("Unrecognized operation types " + this.type() + " " + other.type());

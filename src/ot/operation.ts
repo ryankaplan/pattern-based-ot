@@ -61,16 +61,24 @@ abstract class Operation {
 	protected _timestamp: Timestamp;
 
 	initWithJson(parsed: any) {
-		this.setTimestamp(parsed['timestamp']);
+		if (parsed['timestamp'] !== null) {
+			this._timestamp = new Timestamp(null, null, null);
+			this._timestamp.initWithJson(parsed);
+		}
 	}
 
 	fillJson(json: any) {
-		json['timestamp'] = this._timestamp;
+		if (this._timestamp) {
+			json['timestamp'] = {};
+			this._timestamp.fillJson(json['timestamp']);
+		}
 	}
 
 	copy(other: Operation) {
-		this._timestamp = new Timestamp(null, null, null);
-		this._timestamp.copy(other._timestamp);
+		if (other._timestamp) {
+			this._timestamp = new Timestamp(null, null, null);
+			this._timestamp.copy(other._timestamp);
+		}
 	}
 
 	public timestamp(): Timestamp { return this._timestamp; }
