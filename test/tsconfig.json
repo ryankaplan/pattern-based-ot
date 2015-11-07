@@ -2,11 +2,10 @@
     "compilerOptions": {
         "module": "commonjs",
         "noImplicitAny": true,
-        "removeComments": true,
-        "preserveConstEnums": true,
-        "out": "out.js"
+        "preserveConstEnums": true
     },
     "files": [
-		"control.ts"
+        "ot/test_control.ts",
+        "ot/test_text.ts"
     ]
 }

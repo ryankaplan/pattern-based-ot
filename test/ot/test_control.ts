@@ -1,5 +1,5 @@
-/// <reference path='control.ts' />
-/// <reference path='text.ts' />
+/// <reference path='../../src/ot/control.ts' />
+/// <reference path='../../src/ot/text.ts' />
 
 class MockServer implements OTTransport {
 	private _callbackBySiteId: { [siteId: number]: (op: Operation) => void } = {};

@@ -1,22 +1,22 @@
-function assert(value: boolean, message: string = 'No message'): void {
-  if (!value) {
-    throw new Error(message);
-  }
-}
-
-function fail(data: any) {
-  var dataToThrow: any = null;
-  if (typeof data === 'string') {
-    dataToThrow = JSON.stringify({ message: data });
-  } else {
-    dataToThrow = JSON.stringify(data);
-  }
-  
-  throw new Error('FAILURE DATA: ' + JSON.stringify(dataToThrow));
-}
-
 enum ComparisonResult {
   GREATER_THAN,
   EQUAL,
   LESS_THAN
+}
+
+function compare(first: any, second: any): ComparisonResult {
+  if (first < second) {
+    return ComparisonResult.LESS_THAN;
+  } else if (first > second) {
+    return ComparisonResult.GREATER_THAN;
+  }
+  return ComparisonResult.EQUAL;
+}
+
+class IDGenerator {
+	constructor(private _counter: number = -1) { }
+	next(): number {
+		this._counter += 1;
+		return this._counter;
+	}
 }
