@@ -33,7 +33,7 @@ class MockServer implements OTTransport {
 		}
 	}
 
-	listen(
+	connect(
         siteId: number,
         handleConnect: (siteId: number) => void,
         handleRemoteOp: (op: Operation) => void
@@ -50,7 +50,7 @@ class MockServer implements OTTransport {
 
 	// Helpers for queueing ops for particular sites, to test timing
 
-	setSiteOffline(siteId: number, shouldQueue: boolean) {
+	public setSiteOffline(siteId: number, shouldQueue: boolean) {
 		this._shouldQueueOpsForSiteId[siteId] = shouldQueue;
 
 		if (!shouldQueue && this._queuedOpsForSiteId[siteId]) {
@@ -63,14 +63,14 @@ class MockServer implements OTTransport {
 		}
 	}
 
-	shouldQueueOp(siteId: number) {
+	private shouldQueueOp(siteId: number) {
 		if (!(siteId in this._shouldQueueOpsForSiteId)) {
 			return false;
 		}
 		return this._shouldQueueOpsForSiteId[siteId];
 	}
 
-	queueOp(siteId: number, op: Operation) {
+	private queueOp(siteId: number, op: Operation) {
 		if (!(this._queuedOpsForSiteId[siteId])) {
 			this._queuedOpsForSiteId[siteId] = [];
 		}
@@ -85,7 +85,8 @@ class TestPatternBasedOT extends TestSuite {
 
 		this.tests = [
 			this.testSimpleMultiClientInsertDelete.bind(this),
-			this.testTiming.bind(this)
+			this.testSingleClientOfflineThenResolve.bind(this),
+            this.testTwoClientsOfflineThenResolve.bind(this)
 		];
 	}
 
@@ -112,7 +113,7 @@ class TestPatternBasedOT extends TestSuite {
 		assertEqual(model2.render(), 'ac');
 	}
 
-	testTiming() {
+	testSingleClientOfflineThenResolve() {
 		var transport = new MockServer();
 		var startingDocument = '';
 		var model1 = new TextOperationModel(startingDocument);
@@ -137,13 +138,47 @@ class TestPatternBasedOT extends TestSuite {
 		client2.handleLocalOp(TextOp.Insert('y', 1));
 		client2.handleLocalOp(TextOp.Insert('z', 2));
 
-		assertEqual(model1.render(), 'xyzbc');
+		assertEqual(model1.render(), 'bcxyz');
 		assertEqual(model2.render(), 'xyz');
 
 		// Stop queueing, they should sync back up
 		transport.setSiteOffline(2, false);
-		assertEqual(model2.render(), 'xyzbc');
+		assertEqual(model2.render(), 'bcxyz');
 	}
+
+    testTwoClientsOfflineThenResolve() {
+        var transport = new MockServer();
+        var startingDocument = '';
+        var model1 = new TextOperationModel(startingDocument);
+        var client1 = new OTClient(transport, 1, model1);
+        var model2 = new TextOperationModel(startingDocument);
+        var client2 = new OTClient(transport, 2, model2);
+
+        // Start queueing operations for site id 2
+        transport.setSiteOffline(1, true);
+        transport.setSiteOffline(2, true);
+
+        // Client one types abc then deletes a
+        client1.handleLocalOp(TextOp.Insert('a', 0));
+        client1.handleLocalOp(TextOp.Insert('b', 1));
+        client1.handleLocalOp(TextOp.Insert('c', 2));
+        client1.handleLocalOp(TextOp.Delete(0));
+
+        // Client two types xyz
+        client2.handleLocalOp(TextOp.Insert('x', 0));
+        client2.handleLocalOp(TextOp.Insert('y', 1));
+        client2.handleLocalOp(TextOp.Insert('z', 2));
+
+        assertEqual(model1.render(), 'bc');
+        assertEqual(model2.render(), 'xyz');
+
+        // Stop queueing, they should sync back up
+        transport.setSiteOffline(1, false);
+        transport.setSiteOffline(2, false);
+
+        assertEqual(model1.render(), 'bcxyz');
+        assertEqual(model2.render(), 'bcxyz');
+    }
 }
 
 (new TestPatternBasedOT()).runTests();

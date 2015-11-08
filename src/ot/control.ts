@@ -56,7 +56,7 @@ class OTClient {
 		private _siteId: number,
 		private _model: OperationModel
 	) {
-		_transport.listen(
+		_transport.connect(
             this._siteId,
             this.handleConnect.bind(this),
             this.handleRemoteOp.bind(this)
