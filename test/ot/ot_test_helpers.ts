@@ -1,3 +1,7 @@
+/// <reference path='../../src/ot/text.ts' />
+
+/// <reference path='../test.ts' />
+
 function validateCP1(a: TextOp, b: TextOp, text: string) {
   let ta = a.transform(b);
   let tb = b.transform(a);
@@ -12,3 +16,4 @@ function validateCP1(a: TextOp, b: TextOp, text: string) {
 
   assertEqual(modelAB.render(), modelBA.render());
 }
+

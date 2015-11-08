@@ -191,4 +191,4 @@ class TestTextOperations extends TestSuite {
   }
 }
 
-(new TestTextOperations).runTests();
+(new TestTextOperations()).runTests();

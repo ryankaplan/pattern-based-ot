@@ -3,13 +3,6 @@
 /// <reference path='../base/list.ts' />
 /// <reference path='../base/logging.ts' />
 
-var DEBUG = false;
-function debug(...args: any[]): void {
-	if (DEBUG) {
-		return console.log && Function.apply.call(console.log, console, arguments);
-	}
-}
-
 enum Type {
 	INSERT,
 	DELETE
@@ -47,8 +40,6 @@ class TextOp extends Operation {
 		this._location = other._location;
 		super.copy(other);
 	}
-
-
 
 	//////////////////////////////////////////////////////////////////
 
