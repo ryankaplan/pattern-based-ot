@@ -2,14 +2,10 @@
     "compilerOptions": {
         "module": "commonjs",
         "noImplicitAny": true,
-        "removeComments": true,
         "preserveConstEnums": true,
-        "out": "static/compiled/js/client.js",
         "sourceMap": true
     },
     "files": [
-        "../ot-control/test.ts",
-        "../ot-operations/text.ts",
-        "client.ts"
+        "collaborative_text_controller.ts"
     ]
 }

@@ -23,21 +23,40 @@ function symmetricListTransform(op: Operation, list: Array<Operation>): Array<an
 	return [tOp, tList]
 }
 
+// How to use SocketTransport:
+//
+// 1. Before creating an OTClient, create an SocketTransport class and call connect.
+//    When connect's callback is called, you'll get a siteId and you can construct
+//    an OTClient class.
+//
+//    This will broadcast to all other clients that a client with `siteId` has connected
+//    so they can track its transformation path.
+//
+// 2. In its constructor, the OTClient will call listen on the SocketTransport instance
+//    which sets up callbacks to listen for messages from all clients (including itself).
+//
+// 3. TODO(ryan): Implement a disconnect call and a disconnect message
+//
 interface OTTransport {
-    connect(
-        // The siteId that you're connecting as
-        siteId: number,
-        // This will be called when another site connects
+    connect(complete: (siteId: number) => void): void;
+
+    listenAsClient(
         handleConnect: (siteId: number) => void,
-        // This will be called when another site broadcasts an operation
         handleRemoteOp: (op: Operation) => void
     ): void;
 
     // Send an operation to all other sites
-    broadcast(siteId: number, operation: Operation): void;
+    broadcast(operation: Operation): void;
+}
+
+interface OTClientListener {
+    clientWillHandleRemoteOps(model: OperationModel): void;
+    clientDidHandleRemoteOps(model: OperationModel): void;
 }
 
 class OTClient {
+    private _listeners: Array<OTClientListener> = [];
+
 	private _siteOpIdGen = new IDGenerator();
 
 	// TODO(ryan): What should this be before we've seen any ops from the server?
@@ -56,20 +75,22 @@ class OTClient {
 		private _siteId: number,
 		private _model: OperationModel
 	) {
-		_transport.connect(
-            this._siteId,
+		_transport.listenAsClient(
             this.handleConnect.bind(this),
             this.handleRemoteOp.bind(this)
         );
 	}
 
-    public handleConnect(siteId: number) {
+    public addListener(listener: OTClientListener) {
+        this._listeners.push(listener);
+    }
+
+    private handleConnect(siteId: number) {
         if (siteId != this._siteId) {
             // Initialize this site's transformation path
             this.pathForSiteId(siteId);
         }
     }
-
 
 	public handleLocalOp(op: Operation) {
 		// Execute the operation locally
@@ -87,12 +108,22 @@ class OTClient {
 			this._transformationPathBySiteId[siteId].push(op);
 		}
 
-		this._transport.broadcast(this._siteId, op);
+		this._transport.broadcast(op);
 	}
 
 	// This must be called for op only after every other op from
 	// op.timestamp().siteId has been processed by it.
 	public handleRemoteOp(op: Operation) {
+        for (var listener of this._listeners) {
+            listener.clientWillHandleRemoteOps(this._model);
+        }
+
+        if (DEBUG) {
+            let json = {};
+            op.fillJson(json);
+            log('OTClient', 'handleRemoteOp', 'siteId is ', this._siteId, ' got operation ', JSON.stringify(json));
+        }
+
 		if (op.timestamp().siteId() === this._siteId) {
 			// update op's TO in every transformation path
 
@@ -107,9 +138,12 @@ class OTClient {
                 }
             }
 
+			this._lastRemoteTotalOrderingId = op.timestamp().totalOrderingId();
 			log("handleRemoteOp got operation generated locally. Returning early.");
 			return;
 		}
+
+        console.log('continuing');
 
 		// 1. Locate the transformation path for the corresponding site
 		var path = this.pathForSiteId(op.timestamp().siteId());
@@ -215,6 +249,11 @@ class OTClient {
 
 			this._transformationPathBySiteId[siteId] = newPath;
 		}
+
+        console.log(this._listeners);
+        for (var listener of this._listeners) {
+            listener.clientDidHandleRemoteOps(this._model);
+        }
 	}
 
 	// private

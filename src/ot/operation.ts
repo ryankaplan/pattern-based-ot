@@ -63,7 +63,7 @@ abstract class Operation {
 	initWithJson(parsed: any) {
 		if (parsed['timestamp'] !== null) {
 			this._timestamp = new Timestamp(null, null, null);
-			this._timestamp.initWithJson(parsed);
+			this._timestamp.initWithJson(parsed['timestamp']);
 		}
 	}
 
