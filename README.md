@@ -1,11 +1,12 @@
-# Pattern-based Operational Transformation
+# Pattern-based OT
 
-This is a server and client for a real-time collaborative document editor.
-The implementation is based on the Pattern-based Operational Transform
-algorithm as described in this paper.
+This is a server and client for the Pattern-based Operational Transform
+protocol as described in this paper.
 
-This is a toy and is not fully functional yet (e.g. documents aren't persistently
-stored and all clients start out with an empty document). I don't recommend using
+I made this to learn about the paper and I consider it a toy - not a library
+ready for production use. Documents aren't persistently stored (all clients
+start out with an empty document), we don't deal with connection errors, and
+there are a host of other issues that I haven't found. I don't recommend using
 any of this as production/example code :)
 
 # Coming soon
