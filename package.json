@@ -4,6 +4,8 @@
   "description": "client and server for real-time document collaboration based on pattern-based operational transform",
   "dependencies": {
     "express": "^4.10.2",
-    "socket.io": "^1.3.5"
+    "socket.io": "^1.3.5",
+    "jake": "latest",
+    "nodemon": "latest"
   }
 }

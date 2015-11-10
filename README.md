@@ -13,3 +13,5 @@ any of this as production/example code :)
 - Make building/testing easier
 - Send better 'room' updates to make sure all clients are aware of each other
 - Purge from the list where we can so we don't indefinitely build up O(n^2) ops per client
+- Implement string operation class instead of text character operation class
+- Get rid of socket.io dependency and ensure strict ordering of messages
