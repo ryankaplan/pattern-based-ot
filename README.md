@@ -1,13 +1,13 @@
 # Pattern-based OT
 
 This is a server and client for the Pattern-based Operational Transform
-protocol as described in this paper.
+protocol as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
+by Yi Xu and Chengzheng Sun [^1].
 
-I made this to learn about the paper and I consider it a toy - not a library
-ready for production use. Documents aren't persistently stored (all clients
-start out with an empty document), we don't deal with connection errors, and
-there are a host of other issues that I haven't found. I don't recommend using
-any of this as production/example code :)
+I built this project with goal of better understanding the paper. It's not
+a library intended for use in production and there are a host of known
+issues with it: documents aren't stored persistently, all clients start
+out with an empty document, we don't deal with connection errors, etc.
 
 # Upcoming changes
 
@@ -27,3 +27,9 @@ editor demo, do the following:
 - In one terminal window run `jake watch`
 - In another terminal run `nodemon build/server/server.js`
 - Visit `http://localhost:3000/` in a browser to see the collaborative-text demo
+
+
+# Citations
+
+[1] Yi Xu, Chengzheng Sun, "Conditions and Patterns for Achieving Convergence in OT-based Co-Editors", IEEE
+Transactions on Parallel & Distributed Systems, , no. 1, pp. 1, PrePrints PrePrints, doi:10.1109/TPDS.2015.2412938
