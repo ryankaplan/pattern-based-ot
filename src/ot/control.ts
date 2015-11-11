@@ -23,23 +23,25 @@ function symmetricListTransform(op: Operation, list: Array<Operation>): Array<an
 	return [tOp, tList]
 }
 
-// How to use SocketTransport:
+// How to use Socket:
 //
-// 1. Before creating an OTClient, create an SocketTransport class and call connect.
+// 1. Before creating an OTClient, create an Socket class and call connect.
 //    When connect's callback is called, you'll get a siteId and you can construct
 //    an OTClient class.
 //
 //    This will broadcast to all other clients that a client with `siteId` has connected
 //    so they can track its transformation path.
 //
-// 2. In its constructor, the OTClient will call listen on the SocketTransport instance
+// 2. In its constructor, the OTClient will call listen on the Socket instance
 //    which sets up callbacks to listen for messages from all clients (including itself).
 //
 // 3. TODO(ryan): Implement a disconnect call and a disconnect message
 //
 interface OTTransport {
+	// Called before you create an OTClient
     connect(complete: (siteId: number) => void): void;
 
+	// Called from within OTClient
     listenAsClient(
         handleConnect: (siteId: number) => void,
         handleRemoteOp: (op: Operation) => void

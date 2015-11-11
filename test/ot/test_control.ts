@@ -1,82 +1,20 @@
+/// <reference path='../typings/mocha.d.ts' />
+
 /// <reference path='../../src/ot/control.ts' />
+/// <reference path='../../src/ot/operation.ts' />
 /// <reference path='../../src/ot/text.ts' />
 
+/// <reference path='mock_server.ts' />
 /// <reference path='../test.ts' />
 
-class MockServer implements OTTransport {
-    private _totalOrderingGen: IDGenerator = new IDGenerator();
-    private _handleConnectBySiteId: { [siteId: number]: (siteId: number) => void } = {};
-	private _callbackBySiteId: { [siteId: number]: (op: Operation) => void } = {};
-
-	// The first maps tracks whether we're queueing ops for a particular site.
-	// The second tracks all queues ops for that site.
-	private _shouldQueueOpsForSiteId: { [siteId: number]: boolean } = {};
-	private _queuedOpsForSiteId: { [siteId: number]: Array<Operation> } = {};
-
-	broadcast(siteId: number, operation: Operation): void {
-        // Copy to be realistic about memory sharing between sites.
-        // TODO(ryan): serialize to JSON and back instead.
-        var copy = new TextOp(null, null, null);
-        copy.copy(<TextOp>operation);
-        copy.timestamp().setTotalOrderingId(this._totalOrderingGen.next());
-
-		debug('About to broadcast from siteId = (', siteId, ')');
-		for (var otherSiteId in this._callbackBySiteId) {
-
-			if (this.shouldQueueOp(otherSiteId)) {
-				debug('Queueing op to siteId', otherSiteId);
-				this.queueOp(otherSiteId, copy);
-			} else {
-				debug('Broadcasting to siteId', otherSiteId);
-				this._callbackBySiteId[otherSiteId](copy);
-			}
-		}
-	}
-
-	connect(
-        siteId: number,
-        handleConnect: (siteId: number) => void,
-        handleRemoteOp: (op: Operation) => void
-    ): void {
-		debug('Client with siteId = (' + siteId + ') is listening');
-		this._callbackBySiteId[siteId] = handleRemoteOp;
-
-        for (var otherSiteId in this._handleConnectBySiteId) {
-            this._handleConnectBySiteId[otherSiteId](siteId);
-        }
-
-        this._handleConnectBySiteId[siteId] = handleConnect;
-    }
-
-	// Helpers for queueing ops for particular sites, to test timing
-
-	public setSiteOffline(siteId: number, shouldQueue: boolean) {
-		this._shouldQueueOpsForSiteId[siteId] = shouldQueue;
-
-		if (!shouldQueue && this._queuedOpsForSiteId[siteId]) {
-			// We've stopped queueing ops for this site. Flush!
-			debug('Flushing ', this._queuedOpsForSiteId[siteId].length, ' to site ' , siteId);
-			for (var op of this._queuedOpsForSiteId[siteId]) {
-				this._callbackBySiteId[siteId](op);
-			}
-			this._queuedOpsForSiteId[siteId] = null;
-		}
-	}
-
-	private shouldQueueOp(siteId: number) {
-		if (!(siteId in this._shouldQueueOpsForSiteId)) {
-			return false;
-		}
-		return this._shouldQueueOpsForSiteId[siteId];
-	}
-
-	private queueOp(siteId: number, op: Operation) {
-		if (!(this._queuedOpsForSiteId[siteId])) {
-			this._queuedOpsForSiteId[siteId] = [];
-		}
-		this._queuedOpsForSiteId[siteId].push(op);
-	}
-}
+describe('Array', function() {
+    describe('#indexOf()', function() {
+        it('should return -1 when the value is not present', function() {
+            //[1,2,3].indexOf(5).should.equal(-1);
+            //[1,2,3].indexOf(0).should.equal(-1);
+        });
+    });
+});
 
 class TestPatternBasedOT extends TestSuite {
 
@@ -91,12 +29,16 @@ class TestPatternBasedOT extends TestSuite {
 	}
 
 	testSimpleMultiClientInsertDelete() {
-		var transport = new MockServer();
+		var server = new MockServer();
 		var startingDocument = '';
+
 		var model1 = new TextOperationModel(startingDocument);
-		var client1 = new OTClient(transport, 1, model1);
-		var model2 = new TextOperationModel(startingDocument);
-		var client2 = new OTClient(transport, 2, model2);
+        var socket1 = new MockSocket(server);
+        var client1 = new OTClient(socket1, socket1.connectImmediately(), model1);
+
+        var model2 = new TextOperationModel(startingDocument);
+        var socket2 = new MockSocket(server);
+        var client2 = new OTClient(socket2, socket2.connectImmediately(), model2);
 
 		client1.handleLocalOp(TextOp.Insert('a', 0));
 		client1.handleLocalOp(TextOp.Insert('b', 1));
@@ -114,15 +56,19 @@ class TestPatternBasedOT extends TestSuite {
 	}
 
 	testSingleClientOfflineThenResolve() {
-		var transport = new MockServer();
+		var server = new MockServer();
 		var startingDocument = '';
+
+        var socket1 = new MockSocket(server);
 		var model1 = new TextOperationModel(startingDocument);
-		var client1 = new OTClient(transport, 1, model1);
+		var client1 = new OTClient(socket1, socket1.connectImmediately(), model1);
+
+        var socket2 = new MockSocket(server);
 		var model2 = new TextOperationModel(startingDocument);
-		var client2 = new OTClient(transport, 2, model2);
+		var client2 = new OTClient(socket2, socket2.connectImmediately(), model2);
 
 		// Start queueing operations for site id 2
-		transport.setSiteOffline(2, true);
+        server.setSocketOffline(socket2, true);
 
 		// Client one types abc then deletes a
 		client1.handleLocalOp(TextOp.Insert('a', 0));
@@ -142,21 +88,25 @@ class TestPatternBasedOT extends TestSuite {
 		assertEqual(model2.render(), 'xyz');
 
 		// Stop queueing, they should sync back up
-		transport.setSiteOffline(2, false);
+        server.setSocketOffline(socket2, false);
 		assertEqual(model2.render(), 'bcxyz');
 	}
 
     testTwoClientsOfflineThenResolve() {
-        var transport = new MockServer();
+        var server = new MockServer();
         var startingDocument = '';
+
+        var socket1 = new MockSocket(server);
         var model1 = new TextOperationModel(startingDocument);
-        var client1 = new OTClient(transport, 1, model1);
+        var client1 = new OTClient(socket1, socket1.connectImmediately(), model1);
+
+        var socket2 = new MockSocket(server);
         var model2 = new TextOperationModel(startingDocument);
-        var client2 = new OTClient(transport, 2, model2);
+        var client2 = new OTClient(socket2, socket2.connectImmediately(), model2);
 
         // Start queueing operations for site id 2
-        transport.setSiteOffline(1, true);
-        transport.setSiteOffline(2, true);
+        server.setSocketOffline(socket1, true);
+        server.setSocketOffline(socket2, true);
 
         // Client one types abc then deletes a
         client1.handleLocalOp(TextOp.Insert('a', 0));
@@ -173,8 +123,8 @@ class TestPatternBasedOT extends TestSuite {
         assertEqual(model2.render(), 'xyz');
 
         // Stop queueing, they should sync back up
-        transport.setSiteOffline(1, false);
-        transport.setSiteOffline(2, false);
+        server.setSocketOffline(socket1, false);
+        server.setSocketOffline(socket2, false);
 
         assertEqual(model1.render(), 'bcxyz');
         assertEqual(model2.render(), 'bcxyz');

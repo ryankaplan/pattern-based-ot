@@ -37,7 +37,7 @@ var tscOpts = [
 ];
 
 function buildTypescriptFiles (files, outFile) {
-    var cmd = 'tsc ';
+    var cmd = '$(npm bin)/tsc ';
 
     for (var i = 0; i < files.length; i++) {
         cmd += files[i] + ' ';
@@ -93,11 +93,16 @@ task('build-text-demo', ['copy-static'], function () {
     );
 });
 
-task('test', [BUILD_TEST], function () {
-   buildTypescriptFiles(
-       ['test/ot/test_control.ts', 'test/ot/test_text.ts'],
-       'build/test.js'
-   );
+task('test', [BUILD_DIR], function () {
+    buildTypescriptFiles(
+        ['test/ot/test_control.ts', 'test/ot/test_text.ts'],
+        'build/test.js'
+    );
+
+    jake.exec('$(npm bin)/mocha build/test.js', { printStdout: true }, function () {
+        console.log('Done running tests');
+        complete();
+    });
 });
 
 task('all', ['build-server', 'build-text-demo'], function () {});
