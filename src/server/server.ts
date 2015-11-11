@@ -32,7 +32,7 @@ io.on('connection', function (socket) {
 
 app.get('/', function (req, res) {
     res.writeHead(302, {
-        'Location': '/html/collaborative-text-editor.html'
+        'Location': '/build/www/static/html/collaborative-text-editor.html'
     });
     res.end();
 });
