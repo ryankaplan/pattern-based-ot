@@ -2,7 +2,6 @@
 
 /// <reference path='../base/logging.ts' />
 
-import Socket = SocketIOClient.Socket;
 class Socket implements OTTransport {
     private _socket: SocketIOClient.Socket;
     private _siteId: number = null;
