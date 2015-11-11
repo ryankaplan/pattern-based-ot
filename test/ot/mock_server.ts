@@ -22,7 +22,6 @@ class MockServer {
         for (var socket of this._sockets) {
             socket.handleConnect(newSocket.siteId());
         }
-        console.log('NEW SOCKET', newSocket);
         this._sockets.push(newSocket);
     }
 
