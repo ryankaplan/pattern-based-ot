@@ -24,101 +24,101 @@
  * var controller = new Controller("#collab-doc");
  */
 class CollaborativeTextController implements OTClientListener {
-    private _socket = new Socket();
-    private _client: OTClient = null;
+  private _socket = new Socket();
+  private _client:OTClient = null;
 
-    // jQuery wrapped div of the textarea that we're watching
-    private _textArea: any;
-    private _lastKnownDocumentContent: string;
+  // jQuery wrapped div of the textarea that we're watching
+  private _textArea:any;
+  private _lastKnownDocumentContent:string;
 
-    constructor(elementSelector: string) {
-        log("DocumentController created");
-        this._textArea = $(elementSelector);
-        this._lastKnownDocumentContent = "";
+  constructor(elementSelector:string) {
+    log("DocumentController created");
+    this._textArea = $(elementSelector);
+    this._lastKnownDocumentContent = "";
 
-        // Re-shown when we're connected
-        this._textArea.hide();
+    // Re-shown when we're connected
+    this._textArea.hide();
 
-        this._socket.connect((function (siteId: number) {
-            let model = new TextOperationModel('');
-            this._client = new OTClient(this._socket, siteId, model);
-            this._client.addListener(this);
+    this._socket.connect((function (siteId:number) {
+      let model = new TextOperationModel('');
+      this._client = new OTClient(this._socket, siteId, model);
+      this._client.addListener(this);
 
-            this._textArea.show();
-            this._textArea.attr("contentEditable", "true");
-            this._textArea.val("");
-            this._lastKnownDocumentContent = this._textArea.val();
-            this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
-        }).bind(this));
+      this._textArea.show();
+      this._textArea.attr("contentEditable", "true");
+      this._textArea.val("");
+      this._lastKnownDocumentContent = this._textArea.val();
+      this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
+    }).bind(this));
+  }
+
+  private handleTextAreaChangeEvent() {
+    var newText = this._textArea.val();
+    if (newText == this._lastKnownDocumentContent) {
+      log("Returning early; nothing to sync!");
+      return;
     }
+    this.processLocalTextDiff(this._lastKnownDocumentContent, newText);
+    this._lastKnownDocumentContent = newText;
+  }
 
-    private handleTextAreaChangeEvent() {
-        var newText = this._textArea.val();
-        if (newText == this._lastKnownDocumentContent) {
-            log("Returning early; nothing to sync!");
-            return;
+  private processLocalTextDiff(oldText:string, newText:string) {
+    log("Processing text diff of length", Math.abs(oldText.length - newText.length));
+    var differ = new diff_match_patch();
+
+    // Each `any` is a two-element list of text-operation-type and the text that
+    // it applies to, like ["DIFF_DELETE", "monkey"] or ["DIFF_EQUAL", "ajsk"] or
+    // ["DIFF_INSERT", "rabbit"]
+    var results:Array<Array<any>> = differ.diff_main(oldText, newText);
+
+    var cursorLocation = 0;
+    var operationBuffer:Array<TextOp> = [];
+    for (var i = 0; i < results.length; i++) {
+      var op = results[i][0];
+      var text = results[i][1];
+
+      if (op == DIFF_DELETE) {
+        for (var j = 0; j < text.length; j++) {
+          log("Delete char " + text[j] + " at index " + cursorLocation);
+          operationBuffer.push(TextOp.Delete(cursorLocation));
+
+          // cursorLocation doesn't change. We moved forward one character in the string
+          // but deleted that character, so our 'index' into the string hasn't changed.
         }
-        this.processLocalTextDiff(this._lastKnownDocumentContent, newText);
-        this._lastKnownDocumentContent = newText;
-    }
+      }
 
-    private processLocalTextDiff(oldText: string, newText: string) {
-        log("Processing text diff of length", Math.abs(oldText.length - newText.length));
-        var differ = new diff_match_patch();
-
-        // Each `any` is a two-element list of text-operation-type and the text that
-        // it applies to, like ["DIFF_DELETE", "monkey"] or ["DIFF_EQUAL", "ajsk"] or
-        // ["DIFF_INSERT", "rabbit"]
-        var results: Array<Array<any>> = differ.diff_main(oldText, newText);
-
-        var cursorLocation = 0;
-        var operationBuffer: Array<TextOp> = [];
-        for (var i = 0; i < results.length; i++) {
-            var op = results[i][0];
-            var text = results[i][1];
-
-            if (op == DIFF_DELETE) {
-                for (var j = 0; j < text.length; j++) {
-                    log("Delete char " + text[j] + " at index " + cursorLocation);
-                    operationBuffer.push(TextOp.Delete(cursorLocation));
-
-                    // cursorLocation doesn't change. We moved forward one character in the string
-                    // but deleted that character, so our 'index' into the string hasn't changed.
-                }
-            }
-
-            else if (op == DIFF_INSERT) {
-                for (var j = 0; j < text.length; j++) {
-                    log("Insert char " + text[j] + " after char at index " + cursorLocation);
-                    operationBuffer.push(TextOp.Insert(text[j], cursorLocation));
-                    cursorLocation += 1;
-                }
-            }
-
-            else if (op == DIFF_EQUAL) {
-                cursorLocation += text.length;
-            }
+      else if (op == DIFF_INSERT) {
+        for (var j = 0; j < text.length; j++) {
+          log("Insert char " + text[j] + " after char at index " + cursorLocation);
+          operationBuffer.push(TextOp.Insert(text[j], cursorLocation));
+          cursorLocation += 1;
         }
+      }
 
-        for (var textOp of operationBuffer) {
-            this._client.handleLocalOp(textOp);
-        }
+      else if (op == DIFF_EQUAL) {
+        cursorLocation += text.length;
+      }
     }
 
-    clientWillHandleRemoteOps(model: OperationModel) {
-        // TODO(ryan): This will be useful when we want to batch updates and send
-        // them after a delay. We want to be sure that whenever we're about to handle
-        // remote ops that we've accounted for all recent changes in the document.
+    for (var textOp of operationBuffer) {
+      this._client.handleLocalOp(textOp);
     }
+  }
 
-    clientDidHandleRemoteOps(model: OperationModel) {
-        let textModel: TextOperationModel = <TextOperationModel>model;
-        this._lastKnownDocumentContent = textModel.render();
-        this._textArea.val(this._lastKnownDocumentContent);
-    }
+  clientWillHandleRemoteOps(model:OperationModel) {
+    // TODO(ryan): This will be useful when we want to batch updates and send
+    // them after a delay. We want to be sure that whenever we're about to handle
+    // remote ops that we've accounted for all recent changes in the document.
+  }
+
+  clientDidHandleRemoteOps(model:OperationModel) {
+    let textModel:TextOperationModel = <TextOperationModel>model;
+    this._lastKnownDocumentContent = textModel.render();
+    this._textArea.val(this._lastKnownDocumentContent);
+  }
 }
 
-var pageController: CollaborativeTextController = null;
+var pageController:CollaborativeTextController = null;
 $(document).ready(function () {
-    pageController = new CollaborativeTextController("#ot-document");
+  pageController = new CollaborativeTextController("#ot-document");
 });

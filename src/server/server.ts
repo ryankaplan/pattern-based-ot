@@ -13,31 +13,31 @@ let siteIdGen = new IDGenerator();
 let totalOrderingGen = new IDGenerator();
 
 io.on('connection', function (socket) {
-    let siteId = siteIdGen.next();
+  let siteId = siteIdGen.next();
 
-    // Give the client its siteId
-    socket.emit('site_id', { siteId: siteId });
+  // Give the client its siteId
+  socket.emit('site_id', {siteId: siteId});
 
-    // Tell the others that this client has connected
-    io.emit('client_connected', { siteId: siteId})
+  // Tell the others that this client has connected
+  io.emit('client_connected', {siteId: siteId})
 
-    // msgData is a json-serialized list of operations
-    socket.on('operation', function (operation) {
-        operation.timestamp['totalOrderingId'] = totalOrderingGen.next();
-        let msg = { 'operation': operation };
-        console.log('Broadcasting message: ', JSON.stringify(msg), '\n');
-        io.emit('operation', msg);
-    });
+  // msgData is a json-serialized list of operations
+  socket.on('operation', function (operation) {
+    operation.timestamp['totalOrderingId'] = totalOrderingGen.next();
+    let msg = {'operation': operation};
+    console.log('Broadcasting message: ', JSON.stringify(msg), '\n');
+    io.emit('operation', msg);
+  });
 });
 
 app.get('/', function (req, res) {
-    res.writeHead(302, {
-        'Location': '/build/www/static/html/collaborative-text-editor.html'
-    });
-    res.end();
+  res.writeHead(302, {
+    'Location': '/build/www/static/html/collaborative-text-editor.html'
+  });
+  res.end();
 });
 
 
 http.listen(3000, function () {
-    console.log('listening on *:3000');
+  console.log('listening on *:3000');
 });
