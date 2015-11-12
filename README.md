@@ -11,7 +11,6 @@ out with an empty document, we don't deal with connection errors, etc.
 
 # Upcoming changes
 
-- Make testing better: add it to the build process and use a real testing framework.
 - Send better 'room' updates to make sure all clients are aware of each other.
 - Purge from the transformation map where we can so we don't indefinitely build up O(n^2) ops per client.
 - Implement string operation class instead of text character operation class.
