@@ -48,7 +48,11 @@ var BUILD_TEST = path.join(BUILD, 'test');
 directory(BUILD_SERVER);
 desc('This builds the server and puts it at \'' + BUILD_SERVER + '\'');
 task('build-server', [BUILD_SERVER], function () {
-  buildTypescriptFiles(['src/server/server.ts'], path.join(BUILD_SERVER, 'server.js'));
+  buildTypescriptFiles(
+    ['src/server/server.ts'],
+    path.join(BUILD_SERVER, 'server.js'), function () {
+      console.log('Server built!');
+    });
 });
 
 directory(BUILD_WWW);
@@ -60,8 +64,9 @@ task('copy-static', [BUILD_WWW], function () {
 task('build-text-demo', ['copy-static'], function () {
   buildTypescriptFiles(
     ['src/ui/collaborative_text_controller.ts'],
-    path.join(BUILD_WWW, 'static/js/collaborative-text-controller.js')
-  );
+    path.join(BUILD_WWW, 'static/js/collaborative-text-controller.js'), function () {
+      console.log('Text demo built!');
+    });
 });
 
 directory(BUILD_TEST);

@@ -14,7 +14,6 @@
 // operation
 //
 
-
 /**
  * A Controller instance is tied to a textarea on the page. To make your
  * <textarea id="collab-doc" /> collaborative, just instantiate a controller
@@ -31,27 +30,43 @@ class CollaborativeTextController implements OTClientListener {
   private _lastKnownDocumentContent:string;
 
   constructor(elementSelector:string) {
-    log("DocumentController created");
     this._textArea = $(elementSelector);
     this._lastKnownDocumentContent = "";
 
     // Re-shown when we're connected
     this._textArea.hide();
 
-    this._socket.connect((function (siteId:number) {
-      let model = new TextOperationModel('');
-      let documentId = getDocumentQueryArg('documentId');
-      console.log(documentId);
-      this._client = new OTClient(this._socket, siteId, documentId, model);
-      this._client.addListener(this);
+    let model = new TextOperationModel('');
 
-      this._textArea.show();
-      this._textArea.attr("contentEditable", "true");
-      this._textArea.val("");
-      this._lastKnownDocumentContent = this._textArea.val();
-      this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
-    }).bind(this));
+    let documentId = getDocumentQueryArg('documentId');
+    this._client = new OTClient(this._socket, documentId, model);
+    this._client.addListener(this);
+    this._client.connect();
   }
+
+  // OTClientDelegate implementation
+
+  clientDidConnectToDocument() {
+    this._textArea.show();
+    this._textArea.attr("contentEditable", "true");
+    this._textArea.val("");
+    this._lastKnownDocumentContent = this._textArea.val();
+    this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
+  }
+
+  clientWillHandleRemoteOps(model:OperationModel) {
+    // TODO(ryan): This will be useful when we want to batch updates and send
+    // them after a delay. We want to be sure that whenever we're about to handle
+    // remote ops that we've accounted for all recent changes in the document.
+  }
+
+  clientDidHandleRemoteOps(model:OperationModel) {
+    let textModel:TextOperationModel = <TextOperationModel>model;
+    this._lastKnownDocumentContent = textModel.render();
+    this._textArea.val(this._lastKnownDocumentContent);
+  }
+
+  // UI helpers
 
   private handleTextAreaChangeEvent() {
     var newText = this._textArea.val();
@@ -104,18 +119,6 @@ class CollaborativeTextController implements OTClientListener {
     for (var textOp of operationBuffer) {
       this._client.handleLocalOp(textOp);
     }
-  }
-
-  clientWillHandleRemoteOps(model:OperationModel) {
-    // TODO(ryan): This will be useful when we want to batch updates and send
-    // them after a delay. We want to be sure that whenever we're about to handle
-    // remote ops that we've accounted for all recent changes in the document.
-  }
-
-  clientDidHandleRemoteOps(model:OperationModel) {
-    let textModel:TextOperationModel = <TextOperationModel>model;
-    this._lastKnownDocumentContent = textModel.render();
-    this._textArea.val(this._lastKnownDocumentContent);
   }
 }
 

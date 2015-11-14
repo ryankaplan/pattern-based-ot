@@ -3,6 +3,98 @@
 /// <reference path='../../src/ot/operation.ts' />
 /// <reference path='../../src/ot/text.ts' />
 
+/// <reference path='../../src/ot/ot_server.ts />
+
+let server = new OTServer(io);
+
+io.on('connection', (socket_: SocketIO.Socket) => {
+  let socket = new SocketWrapper(socket_);
+  server.handleConnect(socket);
+
+  socket.on('disconnect', function () {
+    server.handleDisconnect(socket);
+  });
+
+  socket.on('document_connect', function (msg: DocumentConnectMessage) {
+    server.handleDocumentConnectMessage(socket, msg);
+  });
+
+  socket.on('operation', function (msg: OperationMessage) {
+    server.handleOperationMessage(socket, msg);
+  });
+});
+
+class MockSocket implements OTTransport, WrappableSocket {
+  private _socket: SocketIOClient.Socket;
+  private _siteId: number = null;
+
+  private _room: string;
+
+
+  constructor(private _server: OTServer) {}
+
+  // Implement WrappableSocket so that we can pass this to an OTServer
+  join(room: string) {
+
+  }
+
+  emit(type: string, obj: any) {
+
+  }
+
+  on(evt: string, func: (obj: any) => void) {
+
+  }
+
+  // Implement OTTransport so that we can pass this to clients
+
+
+
+connect(
+    documentId: string,
+
+    // handleSiteId will always be called before the first call to handleConnectedClients
+    // which will always be called before the first call to handleRemoteOp
+    handleSiteId: (siteId: number) => void,
+    handleConnectedClients:(connectedClients: Array<number>) => void,
+    handleRemoteOp: (op: Operation) => void
+  ): void {
+    this._socket = io();
+
+    // Handle new site id
+    this._socket.on('site_id', (msg: SiteIdMessage) => {
+      this._siteId = msg.siteId;
+      handleSiteId(msg.siteId);
+      this._socket.emit('document_connect', { documentId: documentId });
+    });
+
+    // Handle document connections update
+    this._socket.on('document_connections', (msg: DocumentConnectionsMessage) => {
+      if (msg.connectedSites.indexOf(this._siteId) === -1) { fail('TODO(ryan)'); }
+      handleConnectedClients(msg.connectedSites);
+    });
+
+    // Handle remote operation
+    this._socket.on('operation', (msg: OperationMessage) => {
+      log('Socket', 'handleRemoteOperation', msg);
+      let textOp = new TextOp(null, null, null);
+      textOp.initWithJson(msg.operation);
+      handleRemoteOp(textOp);
+    });
+  }
+
+  // Send an operation to all other sites
+  public broadcastOperation(operation: Operation):void {
+    let jsonOp = {};
+    operation.fillJson(jsonOp);
+
+    let msg: OperationMessage = <OperationMessage>{};
+    msg.operation = jsonOp;
+    this._socket.emit('operation', msg);
+  }
+}
+
+
 
 class MockServer {
   private _siteIdGen:IDGenerator = new IDGenerator();

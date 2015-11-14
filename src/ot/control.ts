@@ -25,23 +25,29 @@ function symmetricListTransform(op:Operation, list:Array<Operation>):Array<any> 
 }
 
 interface OTTransport {
-  // Called by user of OTClient. Returns siteId which is also passed to OTClient.
-  connect(complete:(siteId: number) => void): void;
+  connect(
+    documentId: string,
 
-  // Called internally by OTClient
-  connectToDocument(documentId: string, handleConnectedClients:(connectedClients: Array<number>) => void): void;
-  listenForOps(handleRemoteOp: (op: Operation) => void): void;
+    // handleSiteId will always be called before the first call to handleConnectedClients
+    // which will always be called before the first call to handleRemoteOp
+    handleSiteId: (siteId: number) => void,
+    handleConnectedClients:(connectedClients: Array<number>) => void,
+    handleRemoteOp: (op: Operation) => void
+  ): void;
+
   broadcastOperation(operation: Operation): void;
 }
 
 interface OTClientListener {
   clientWillHandleRemoteOps(model:OperationModel): void;
   clientDidHandleRemoteOps(model:OperationModel): void;
+  clientDidConnectToDocument(): void;
 }
 
 class OTClient {
   private _listeners:Array<OTClientListener> = [];
 
+  private _siteId: number = -1;
   private _siteOpIdGen = new IDGenerator();
 
   // TODO(ryan): What should this be before we've seen any ops from the server?
@@ -55,20 +61,43 @@ class OTClient {
   // the client with someSiteId.
   private _transformationPathBySiteId:{ [siteId: string]: Deque<Operation> } = {};
 
-  constructor(private _transport: OTTransport,
-              private _siteId: number,
-              private _documentId: string,
-              private _model: OperationModel) {
+  private _connectedToDocument: boolean = false;
 
-    _transport.listenForOps(this.handleRemoteOp.bind(this));
-    _transport.connectToDocument(this._documentId, this.handleDocumentConnectedSites.bind(this));
+  constructor(
+    private _transport: OTTransport,
+    private _documentId: string,
+    private _model: OperationModel
+  ) { }
+
+  public connect(): OTClient {
+    this._transport.connect(
+      this._documentId,
+      this.handleSiteId.bind(this),
+      this.handleDocumentConnectedSites.bind(this),
+      this.handleRemoteOp.bind(this)
+    );
+    // So that we can do let client = (new OTClient).connect();
+    return this;
   }
 
   public addListener(listener:OTClientListener) {
     this._listeners.push(listener);
   }
 
+  private handleSiteId(siteId: number) {
+    this._siteId = siteId;
+  }
+
   private handleDocumentConnectedSites(connectedSites: Array<number>) {
+    if (!this._connectedToDocument) {
+      // We're officially connected to this document
+      this._connectedToDocument = true;
+
+      for (var listener of this._listeners) {
+        listener.clientDidConnectToDocument();
+      }
+    }
+
     for (var siteId of connectedSites) {
       // Initialize this site's transformation path
       this.pathForSiteId(siteId);
