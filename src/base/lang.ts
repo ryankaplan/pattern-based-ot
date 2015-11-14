@@ -1,3 +1,13 @@
+function randomString(length: number, chars: string) {
+  var result = '';
+  for (var i = length; i > 0; --i) {
+    result += chars[Math.round(Math.random() * (chars.length - 1))];
+  }
+  return result;
+}
+
+var ALPHA_NUMERIC = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 enum ComparisonResult {
   GREATER_THAN,
   EQUAL,

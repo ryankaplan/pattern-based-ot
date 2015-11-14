@@ -1,12 +1,11 @@
-/// <reference path='../typings/diff_match_patch/diff_match_patch.d.ts' />
-/// <reference path='../typings/jquery/jquery.d.ts' />
-
 /// <reference path='../base/logging.ts' />
+/// <reference path='../browser/url.ts' />
 /// <reference path='../ot/control.ts' />
 /// <reference path='../ot/operation.ts' />
 /// <reference path='../ot/text.ts' />
 /// <reference path='../transport/socket.ts' />
-
+/// <reference path='../typings/diff_match_patch/diff_match_patch.d.ts' />
+/// <reference path='../typings/jquery/jquery.d.ts' />
 
 // Messages that are send through our sockets:
 //
@@ -41,7 +40,9 @@ class CollaborativeTextController implements OTClientListener {
 
     this._socket.connect((function (siteId:number) {
       let model = new TextOperationModel('');
-      this._client = new OTClient(this._socket, siteId, model);
+      let documentId = getDocumentQueryArg('documentId');
+      console.log(documentId);
+      this._client = new OTClient(this._socket, siteId, documentId, model);
       this._client.addListener(this);
 
       this._textArea.show();

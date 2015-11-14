@@ -24,30 +24,14 @@ function symmetricListTransform(op:Operation, list:Array<Operation>):Array<any> 
   return [tOp, tList]
 }
 
-// How to use Socket:
-//
-// 1. Before creating an OTClient, create an Socket class and call connect.
-//    When connect's callback is called, you'll get a siteId and you can construct
-//    an OTClient class.
-//
-//    This will broadcast to all other clients that a client with `siteId` has connected
-//    so they can track its transformation path.
-//
-// 2. In its constructor, the OTClient will call listen on the Socket instance
-//    which sets up callbacks to listen for messages from all clients (including itself).
-//
-// 3. TODO(ryan): Implement a disconnect call and a disconnect message
-//
 interface OTTransport {
-  // Called before you create an OTClient
-  connect(complete:(siteId:number) => void): void;
+  // Called by user of OTClient. Returns siteId which is also passed to OTClient.
+  connect(complete:(siteId: number) => void): void;
 
-  // Called from within OTClient
-  listenAsClient(handleConnect:(siteId:number) => void,
-                 handleRemoteOp:(op:Operation) => void): void;
-
-  // Send an operation to all other sites
-  broadcast(operation:Operation): void;
+  // Called internally by OTClient
+  connectToDocument(documentId: string, handleConnectedClients:(connectedClients: Array<number>) => void): void;
+  listenForOps(handleRemoteOp: (op: Operation) => void): void;
+  broadcastOperation(operation: Operation): void;
 }
 
 interface OTClientListener {
@@ -71,21 +55,21 @@ class OTClient {
   // the client with someSiteId.
   private _transformationPathBySiteId:{ [siteId: string]: Deque<Operation> } = {};
 
-  constructor(private _transport:OTTransport,
-              private _siteId:number,
-              private _model:OperationModel) {
-    _transport.listenAsClient(
-      this.handleConnect.bind(this),
-      this.handleRemoteOp.bind(this)
-    );
+  constructor(private _transport: OTTransport,
+              private _siteId: number,
+              private _documentId: string,
+              private _model: OperationModel) {
+
+    _transport.listenForOps(this.handleRemoteOp.bind(this));
+    _transport.connectToDocument(this._documentId, this.handleDocumentConnectedSites.bind(this));
   }
 
   public addListener(listener:OTClientListener) {
     this._listeners.push(listener);
   }
 
-  private handleConnect(siteId:number) {
-    if (siteId != this._siteId) {
+  private handleDocumentConnectedSites(connectedSites: Array<number>) {
+    for (var siteId of connectedSites) {
       // Initialize this site's transformation path
       this.pathForSiteId(siteId);
     }
@@ -107,7 +91,7 @@ class OTClient {
       this._transformationPathBySiteId[siteId].push(op);
     }
 
-    this._transport.broadcast(op);
+    this._transport.broadcastOperation(op);
   }
 
   // This must be called for op only after every other op from
@@ -214,7 +198,7 @@ class OTClient {
     // 7. Walk through every other client's transformation path...
 
     for (var siteId in this._transformationPathBySiteId) {
-      var path = this._transformationPathBySiteId[siteId];
+      var path = this.pathForSiteId(siteId);
 
       // Find position immediately after the last op in path whose total ordering
       // is less than op's total ordering.

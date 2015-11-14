@@ -16,11 +16,11 @@ describe('Pattern Based OT', () => {
 
             var model1 = new TextOperationModel(startingDocument);
             var socket1 = new MockSocket(server);
-            var client1 = new OTClient(socket1, socket1.connectImmediately(), model1);
+            var client1 = new OTClient(socket1, socket1.connectImmediately(), 'docId', model1);
 
             var model2 = new TextOperationModel(startingDocument);
             var socket2 = new MockSocket(server);
-            var client2 = new OTClient(socket2, socket2.connectImmediately(), model2);
+            var client2 = new OTClient(socket2, socket2.connectImmediately(), 'docId', model2);
 
             client1.handleLocalOp(TextOp.Insert('a', 0));
             client1.handleLocalOp(TextOp.Insert('b', 1));
@@ -45,11 +45,11 @@ describe('Pattern Based OT', () => {
 
             var socket1 = new MockSocket(server);
             var model1 = new TextOperationModel(startingDocument);
-            var client1 = new OTClient(socket1, socket1.connectImmediately(), model1);
+            var client1 = new OTClient(socket1, socket1.connectImmediately(), 'docId', model1);
 
             var socket2 = new MockSocket(server);
             var model2 = new TextOperationModel(startingDocument);
-            var client2 = new OTClient(socket2, socket2.connectImmediately(), model2);
+            var client2 = new OTClient(socket2, socket2.connectImmediately(), 'docId', model2);
 
             // Start queueing operations for site id 2
             server.setSocketOffline(socket2, true);
@@ -84,11 +84,11 @@ describe('Pattern Based OT', () => {
 
             var socket1 = new MockSocket(server);
             var model1 = new TextOperationModel(startingDocument);
-            var client1 = new OTClient(socket1, socket1.connectImmediately(), model1);
+            var client1 = new OTClient(socket1, socket1.connectImmediately(), 'docId', model1);
 
             var socket2 = new MockSocket(server);
             var model2 = new TextOperationModel(startingDocument);
-            var client2 = new OTClient(socket2, socket2.connectImmediately(), model2);
+            var client2 = new OTClient(socket2, socket2.connectImmediately(), 'docId', model2);
 
             // Start queueing operations for site id 2
             server.setSocketOffline(socket1, true);
