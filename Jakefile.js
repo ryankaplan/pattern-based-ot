@@ -2,6 +2,9 @@ var path = require('path');
 
 var tscKwOpts = {
   'm': 'commonjs',
+
+  // Necessary for getters and setters
+  't': 'ES5'
 };
 
 var tscOpts = [
@@ -64,7 +67,10 @@ task('build-text-demo', ['copy-static'], function () {
 directory(BUILD_TEST);
 desc('This compiles and runs all tests');
 task('test', [BUILD_TEST], function () {
-  var sources = ['test/ot/test_control.ts', 'test/ot/test_text.ts'];
+  var sources = [
+    'test/ot/test_control.ts',
+    'test/ot/test_text.ts'
+  ];
   var output = path.join(BUILD_TEST, 'test.js');
   buildTypescriptFiles(sources, output, function () {
 
