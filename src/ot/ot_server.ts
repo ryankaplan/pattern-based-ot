@@ -3,8 +3,9 @@
 /// <reference path='../base/lang.ts' />
 /// <reference path='../base/list.ts' />
 
-interface OTSocket {
+interface RawServerSocket {
   // joins a channel. can join one at a time.
+  // not to be used by the client
   join(channel: string): void;
 
   // send a message to this socket.
@@ -18,11 +19,11 @@ interface OTSocketServer {
   send(channel: string, type: string, msg: any): void;
 }
 
-// Wraps OTSocket with a siteId and documentId
+// Wraps RawServerSocket with a siteId and documentId
 class OTSocketWrapper {
   private _siteId: number;
   private _documentId: string;
-  constructor(private _socket: OTSocket) { }
+  constructor(private _socket: RawServerSocket) { }
 
   documentId(): string { return this._documentId; }
   setDocumentId(documentId: string): void { this._documentId = documentId; }
@@ -50,12 +51,12 @@ class OTServer {
 
   handleConnect(socket: OTSocketWrapper): void {
     socket.setSiteId(this._siteIdGen.next());
-    console.log('handleConnect', JSON.stringify(socket.siteId()));
+    log('handleConnect', JSON.stringify(socket.siteId()));
     socket.emit('site_id', { siteId: socket.siteId() });
   }
 
   handleDisconnect(socket: OTSocketWrapper): void {
-    console.log('handleDisconnect', JSON.stringify(socket.siteId()));
+    log('handleDisconnect', JSON.stringify(socket.siteId()));
     let documentId = socket.documentId();
     if (documentId !== null && documentId in this._sitesByDocumentId) {
       removeElement(this._sitesByDocumentId[documentId], documentId);
@@ -63,7 +64,7 @@ class OTServer {
   }
 
   handleDocumentConnectMessage(socket: OTSocketWrapper, msg: DocumentConnectMessage) {
-    console.log('handleDocumentConnectMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
+    log('handleDocumentConnectMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
 
     socket.setDocumentId(msg.documentId);
     socket.join(socket.documentId());
@@ -77,7 +78,7 @@ class OTServer {
   }
 
   handleOperationMessage(socket: OTSocketWrapper, msg: OperationMessage) {
-    console.log('handleOperationMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
+    log('handleOperationMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
     assert(socket.siteId() !== null);
     assert(socket.documentId() !== null);
 

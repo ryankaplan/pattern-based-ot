@@ -4,6 +4,7 @@
 /// <reference path='../base/logging.ts' />
 
 enum Type {
+  NOOP,
   INSERT,
   DELETE
 }
@@ -13,6 +14,10 @@ class TextOp extends Operation {
               private _char:string, // null for DELETE
               private _location:number) {
     super()
+  }
+
+  static Noop() {
+    return new TextOp(Type.NOOP, null, null);
   }
 
   static Insert(char:string, location:number) {
@@ -46,24 +51,36 @@ class TextOp extends Operation {
 
   //////////////////////////////////////////////////////////////////
 
-  type() {
+  readableType(): string {
+    switch (this._type) {
+      case Type.INSERT: return 'INSERT';
+      case Type.DELETE: return 'DELETE';
+      case Type.NOOP: return 'NOOP';
+    }
+  }
+
+  type(): Type {
     return this._type;
   }
 
-  char() {
+  char(): string {
     return this._char;
   }
 
-  location() {
+  location(): number {
     return this._location;
   }
 
-  isDelete() {
-    return this._type == Type.DELETE;
+  isDelete(): boolean {
+    return this._type === Type.DELETE;
   }
 
-  isInsert() {
-    return this._type == Type.INSERT;
+  isInsert(): boolean {
+    return this._type === Type.INSERT;
+  }
+
+  isNoop(): boolean {
+    return this._type === Type.NOOP;
   }
 
   // Transform works for two operations a and b such that
@@ -74,7 +91,7 @@ class TextOp extends Operation {
   // and applying a and then tB to a document has the same result
   // as a applying b and then tA.
 
-  transform(other_:Operation) {
+  transform(other_:Operation): TextOp {
     let other = <TextOp>other_;
     let copy = new TextOp(null, null, null);
     copy.copy(this);
@@ -89,6 +106,10 @@ class TextOp extends Operation {
       debug('About to transform operations');
       debug('This: ', jsonThis);
       debug('Other: ', other);
+    }
+
+    if (this.isNoop() || other.isNoop()) {
+      return copy;
     }
 
     let locationRelation = compare(this.location(), other.location());
@@ -123,8 +144,12 @@ class TextOp extends Operation {
 
     else if (this.isDelete() && other.isDelete) {
       debug('Delete vs. Delete. locationRelation = ', locationRelation);
-      if (locationRelation == ComparisonResult.GREATER_THAN) {
+      if (locationRelation == ComparisonResult.GREATER_THAN || locationRelation == ComparisonResult.EQUAL) {
         copy._location -= 1;
+      }
+
+      if (copy._location === -1) {
+        copy = TextOp.Noop();
       }
 
       // if the location is equal, these ops commute
@@ -156,6 +181,10 @@ class TextOperationModel implements OperationModel {
 
   public execute(op_:Operation):void {
     let op = <TextOp>op_;
+
+    if (op.isNoop()) {
+      return;
+    }
 
     if (op.isInsert()) {
       if (op.location() < 0) {

@@ -28,7 +28,10 @@ let server: OTServer = new OTServer(new SocketServer(socketIOServer));
 
 socketIOServer.on('connection', (socket_: SocketIO.Socket) => {
   let socket = new OTSocketWrapper(socket_);
-  server.handleConnect(socket);
+
+  socket.on('ready', function () {
+    server.handleConnect(socket);
+  });
 
   socket.on('disconnect', function () {
     server.handleDisconnect(socket);

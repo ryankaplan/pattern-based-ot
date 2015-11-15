@@ -1,9 +1,182 @@
 /// <reference path='../../src/base/lang.ts' />
-
 /// <reference path='../../src/ot/operation.ts' />
+/// <reference path='../../src/ot/ot_server.ts' />
 /// <reference path='../../src/ot/text.ts' />
 
-/// <reference path='../../src/ot/ot_server.ts />
+
+// TODO(ryan): MockSocketServer doesn't handle disconnects, but they're
+// an important case to test.
+class MockSocketServer implements OTSocketServer {
+  private _callbackByEvent: { [evt: string]: (socket: any) => void } = {};
+  private _connectedSockets: Array<MockRawServerSocket> = [];
+
+  constructor() {}
+
+  on(evt: string, callback: (socket: any) => void) {
+    this._callbackByEvent[evt] = callback;
+  }
+
+  handleNewSocketConnection(serverSocket: MockRawServerSocket) {
+    this._connectedSockets.push(serverSocket);
+    this._callbackByEvent['connection'](serverSocket);
+  }
+
+  // Implement OTSocketServer
+  send(channel: string, type: string, msg: any) {
+    for (var socket of this._connectedSockets) {
+      if (socket.channel() === channel) {
+        socket.emit(type, msg);
+      }
+    }
+  }
+}
+
+class MockRawServerSocket implements RawServerSocket {
+  private _callbackByEvt: { [evt: string]: (obj: any) => void } = {};
+  private _channel: string = null;
+  private _clientSocket: MockRawClientSocket;
+
+  // Helpers
+  setClientSocket(clientSocket: MockRawClientSocket) { this._clientSocket = clientSocket; }
+  channel(): string { return this._channel; }
+
+  handleMessageFromClient(type: string, obj: any) {
+    if (type in this._callbackByEvt) {
+      this._callbackByEvt[type](obj);
+    } else {
+      log('No callback found in MockRawServerSocket for type ' + type);
+    }
+  }
+
+  // Implement RawServerSocket
+  join(channel: string): void { this._channel = channel; }
+  emit(type: string, obj: any): void { this._clientSocket.handleMessageFromServer(type, obj); }
+  on(evt: string, func: (obj: any) => void): void { this._callbackByEvt[evt] = func; }
+}
+
+interface Message {
+  type: string;
+  value: any;
+}
+
+class MockRawClientSocket implements RawClientSocket {
+  private _callbackByEvt: { [evt: string]: (obj: any) => void } = {};
+  private _serverSocket: MockRawServerSocket;
+
+  private _isQueueingSends: boolean = false;
+  private _queuedSends: Array<Message> = [];
+
+  private _isQueueingReceives: boolean = false;
+  private _queuedReceives: Array<Message> = [];
+
+  // Just like with socketio, it connects to the server as soon as you create
+  // the object. I personally dislike this pattern.
+  constructor(private _server: MockSocketServer) {
+    this._serverSocket = new MockRawServerSocket();
+    this._serverSocket.setClientSocket(this);
+    this._server.handleNewSocketConnection(this._serverSocket);
+  }
+
+  setIsQueueingSends(isQueueing: boolean) {
+    if (isQueueing === this._isQueueingSends) { return; }
+
+    if (!isQueueing) {
+      // flush sends
+      for (var msg of this._queuedSends) {
+        this._serverSocket.handleMessageFromClient(msg.type, msg.value);
+      }
+      this._queuedSends = [];
+    }
+
+    this._isQueueingSends = isQueueing;
+  }
+
+  setIsQueueingReceives(isQueueing: boolean) {
+    if (isQueueing === this._isQueueingReceives) { return; }
+
+    if (!isQueueing) {
+      // flush receives
+      for (var msg of this._queuedReceives) {
+        if (msg.type in this._callbackByEvt) {
+          this._callbackByEvt[msg.type](msg.value);
+        } else {
+          fail('No callback found in MockRawClientSocket for type ' + msg.type);
+        }
+      }
+      this._queuedReceives = [];
+    }
+
+    this._isQueueingReceives = isQueueing;
+  }
+
+  handleMessageFromServer(type: string, obj: any) {
+    if (this._isQueueingReceives) {
+      this._queuedReceives.push({
+        type: type,
+        value: obj
+      });
+      return;
+    }
+
+    if (type in this._callbackByEvt) {
+      this._callbackByEvt[type](obj);
+    } else {
+      fail('No callback found in MockRawClientSocket for type ' + type);
+    }
+  }
+
+  // Used by client to send/receive from server
+  on(evt: string, func: (val: any) => void) {
+    this._callbackByEvt[evt] = func;
+  }
+
+  emit(type: string, obj: any) {
+    if (this._isQueueingSends) {
+      this._queuedSends.push({
+        type: type,
+        value: obj
+      });
+      return;
+    }
+
+    this._serverSocket.handleMessageFromClient(type, obj);
+  }
+}
+
+/*
+
+
+
+
+
+let mockSocketServer = new MockSocketServer();
+let server = new OTServer(mockSocketServer);
+
+// This should look a lot like the code in server.ts
+mockSocketServer.on('connection', (socket_: RawServerSocket) => {
+  let socket = new OTSocketWrapper(socket_);
+  server.handleConnect(socket);
+
+  socket.on('disconnect', function () {
+    server.handleDisconnect(socket);
+  });
+
+  socket.on('document_connect', function (msg: DocumentConnectMessage) {
+    server.handleDocumentConnectMessage(socket, msg);
+  });
+
+  socket.on('operation', function (msg: OperationMessage) {
+    server.handleOperationMessage(socket, msg);
+  });
+});
+
+
+
+
+
+
+
+
 
 let server = new OTServer(io);
 
@@ -24,7 +197,7 @@ io.on('connection', (socket_: SocketIO.Socket) => {
   });
 });
 
-class MockSocket implements OTTransport, WrappableSocket {
+class MockSockett implements OTClientTransport, WrappableSocket {
   private _socket: SocketIOClient.Socket;
   private _siteId: number = null;
 
@@ -46,7 +219,7 @@ class MockSocket implements OTTransport, WrappableSocket {
 
   }
 
-  // Implement OTTransport so that we can pass this to clients
+  // Implement OTClientTransport so that we can pass this to clients
 
 
 
@@ -189,7 +362,7 @@ interface ConnectImmediatelyResult {
   connectedSites: Array<number>;
 }
 
-class MockSocket implements OTTransport {
+class MockSocket implements OTClientTransport {
   private _siteId:number;
   private _documentId: string;
   private _handleDocumentConnectedSites:(connectedSites:Array<number>) => void;
@@ -255,3 +428,5 @@ class MockSocket implements OTTransport {
     this._server.clientBroadcast(operation);
   }
 }
+
+  */

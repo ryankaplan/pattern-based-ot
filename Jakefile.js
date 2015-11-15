@@ -61,7 +61,8 @@ task('copy-static', [BUILD_WWW], function () {
   jake.cpR('src/static', path.join(BUILD_WWW));
 });
 
-task('build-text-demo', ['copy-static'], function () {
+desc('Builds the demo')
+task('demo', ['copy-static'], function () {
   buildTypescriptFiles(
     ['src/ui/collaborative_text_controller.ts'],
     path.join(BUILD_WWW, 'static/js/collaborative-text-controller.js'), function () {

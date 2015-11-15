@@ -2,12 +2,18 @@
 /// <reference path='../ot/control.ts' />
 /// <reference path='../ot/messages.ts' />
 /// <reference path='../ot/text.ts' />
-/// <reference path='../typings/socket.io/client.d.ts' />
+
+interface RawClientSocket {
+  on(evt: string, func: (val: any) => void): void;
+  emit(evt: string, obj: any): void;
+}
 
 // Used by the client
-class Socket implements OTTransport {
-  private _socket: SocketIOClient.Socket;
+class SocketClientTransport implements OTClientTransport {
   private _siteId: number = null;
+
+  // TODO(ryan): type this better
+  constructor(private _socket: RawClientSocket) {}
 
   connect(
     documentId: string,
@@ -18,7 +24,6 @@ class Socket implements OTTransport {
     handleConnectedClients:(connectedClients: Array<number>) => void,
     handleRemoteOp: (op: Operation) => void
   ): void {
-    this._socket = io();
 
     // First the server will send us our site id
     this._socket.on('site_id', (msg: SiteIdMessage) => {
@@ -42,6 +47,9 @@ class Socket implements OTTransport {
       textOp.initWithJson(msg.operation);
       handleRemoteOp(textOp);
     });
+
+    // Tell the server to give us our siteId
+    this._socket.emit('ready', null);
   }
 
   // Send an operation to all other sites

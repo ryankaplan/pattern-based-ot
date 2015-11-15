@@ -248,10 +248,10 @@ class Deque<T> {
   }
 
   valueOf(): string { return this.toString(); }
-  removeFront(): T { return this.shift(); }
-  removeBack(): T { return this.pop(); }
-  insertFront(item: T): number { return this.unshift(item); }
-  insertBack(item: T): number { return this.push(item); }
+  popFront(): T { return this.shift(); }
+  popBack(): T { return this.pop(); }
+  pushFront(item: T): number { return this.unshift(item); }
+  pushBack(item: T): number { return this.push(item); }
   enqueue(item: T): number { return this.push(item); }
   dequeue(): T { return this.shift(); }
   toJSON(): Array<T> { return this.toArray(); }

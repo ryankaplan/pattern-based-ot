@@ -3,9 +3,10 @@
 /// <reference path='../ot/control.ts' />
 /// <reference path='../ot/operation.ts' />
 /// <reference path='../ot/text.ts' />
-/// <reference path='../transport/socket.ts' />
+/// <reference path='../transport/socket_client_transport.ts' />
 /// <reference path='../typings/diff_match_patch/diff_match_patch.d.ts' />
 /// <reference path='../typings/jquery/jquery.d.ts' />
+/// <reference path='../typings/socket.io/client.d.ts' />
 
 // Messages that are send through our sockets:
 //
@@ -22,7 +23,7 @@
  * var controller = new Controller("#collab-doc");
  */
 class CollaborativeTextController implements OTClientListener {
-  private _socket = new Socket();
+  private _socket = new SocketClientTransport(io());
   private _client:OTClient = null;
 
   // jQuery wrapped div of the textarea that we're watching

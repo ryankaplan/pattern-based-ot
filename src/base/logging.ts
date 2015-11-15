@@ -14,7 +14,7 @@ function assert(value:boolean, message:string = 'No message'):void {
   }
 }
 
-var DEBUG = true;
+var DEBUG = false;
 function debug(...args:any[]):void {
   if (DEBUG) {
     Function.apply.call(log, null, arguments);
