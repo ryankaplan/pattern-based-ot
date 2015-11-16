@@ -11,11 +11,17 @@ out with an empty document, we don't deal with connection errors, etc.
 
 # Upcoming changes
 
-- Send better 'room' updates to make sure all clients are aware of each other.
+Priority:
+
+- Fix broken tests!
 - Purge from the transformation map where we can so we don't indefinitely build up O(n^2) ops per client.
 - Implement string operation class instead of text character operation class.
-- Get rid of socket.io dependency and ensure strict ordering of messages.
 - Implement a tree OT type of some form. Maybe for rich text editing.
+
+Cleanup:
+
+- Make socket.io less of a dependency
+- Better logging solution so that running tests doesn't spew tons of logs
 
 # Development Setup
 
@@ -23,6 +29,7 @@ To run tests, run `jake test` from the project root. To run the collaborative te
 editor demo, do the following:
 
 - Install npm by downloading and installing node.js from here: https://nodejs.org/en/
+- Open the repo folder and run `npm install`
 - In one terminal window run `jake watch`
 - In another terminal run `nodemon build/server/server.js`
 - Visit `http://localhost:3000/` in a browser to see the collaborative-text demo
