@@ -1,16 +1,19 @@
 # Pattern-based OT
 
-This is a server and client for the Pattern-based Operational Transform
+This project is a server and client for the Pattern-based Operational Transform
 protocol as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
-by Yi Xu and Chengzheng Sun [^1].
+by Yi Xu and Chengzheng Sun [^1]. It also contains a demo of a collaborative
+text editor that uses the server/client.
 
-I'm building this project for fun with the goal of better understanding the
-paper. It's not a library intended for public use, but I'm making it public
-in case others find it interesting or the code useful.
+I'm building this project for fun -- I want to better understand OT. And
+implementing an OT algorithm seemed like a good start. It's not a library
+intended for public use but I'm making it public anyway in case others find it
+interesting or the code useful.
 
-There aren't any known bugs in the OT control or operation algorithms, but
-it's not built to be a production-safe library. I strongly recommend
-against using it for anything serious.
+There aren't any known bugs in the OT code, but this is not built to be a
+production-ready library. All clients have to join a document at once for
+anything to work, all data is stored in memory, it doesn't have great test
+coverage, etc.
 
 Here's a gif of it in action:
 
