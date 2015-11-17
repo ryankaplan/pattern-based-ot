@@ -72,7 +72,7 @@ class CollaborativeTextController implements OTClientListener {
   private handleTextAreaChangeEvent() {
     var newText = this._textArea.val();
     if (newText == this._lastKnownDocumentContent) {
-      log("Returning early; nothing to sync!");
+      debugLog("Returning early; nothing to sync!");
       return;
     }
     this.processLocalTextDiff(this._lastKnownDocumentContent, newText);
@@ -80,7 +80,7 @@ class CollaborativeTextController implements OTClientListener {
   }
 
   private processLocalTextDiff(oldText:string, newText:string) {
-    log("Processing text diff of length", Math.abs(oldText.length - newText.length));
+    debugLog("Processing text diff of length", Math.abs(oldText.length - newText.length));
     var differ = new diff_match_patch();
 
     // Each `any` is a two-element list of text-operation-type and the text that
@@ -96,7 +96,7 @@ class CollaborativeTextController implements OTClientListener {
 
       if (op == DIFF_DELETE) {
         for (var j = 0; j < text.length; j++) {
-          log("Delete char " + text[j] + " at index " + cursorLocation);
+          debugLog("Delete char " + text[j] + " at index " + cursorLocation);
           operationBuffer.push(TextOp.Delete(cursorLocation));
 
           // cursorLocation doesn't change. We moved forward one character in the string
@@ -106,7 +106,7 @@ class CollaborativeTextController implements OTClientListener {
 
       else if (op == DIFF_INSERT) {
         for (var j = 0; j < text.length; j++) {
-          log("Insert char " + text[j] + " after char at index " + cursorLocation);
+          debugLog("Insert char " + text[j] + " after char at index " + cursorLocation);
           operationBuffer.push(TextOp.Insert(text[j], cursorLocation));
           cursorLocation += 1;
         }

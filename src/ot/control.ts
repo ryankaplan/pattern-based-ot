@@ -154,8 +154,18 @@ class OTClient {
     // 1. Locate the transformation path for the corresponding site
     var path = this.pathForSiteId(op.timestamp().siteId());
 
-    this.debugLog('transformation path for this site ' + JSON.stringify(path.toJSON()));
 
+    if (path.length > 0) {
+      // We can get rid of ops in the path whose total ordering id is before
+      // op's remote total ordering id (meaning that they were delivered to
+      // op's generating site before op was created).
+      //
+      // Also, for reference, enqueue pushes on back, dequeue pops from front.
+      while (path.peekFront().timestamp() !== null && path.peekFront().timestamp().totalOrderingId() < op.timestamp().remoteTotalOrderingId()) {
+        path.popFront();
+      }
+    }
+    
     // 2, 3 split into L1 and L2
     var l1: Array<Operation> = [];
     var l2: Array<Operation> = [];

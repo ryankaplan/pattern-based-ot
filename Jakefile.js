@@ -87,10 +87,12 @@ task('test', [BUILD_TEST], function () {
   });
 });
 
-task('all', ['build-server', 'build-text-demo'], function () {
+desc('Build all')
+task('all', ['build-server', 'demo'], function () {
 });
 
-watchTask(['build-server', 'build-text-demo'], function () {
+desc('Watch and build the server and teh demo')
+watchTask(['build-server', 'demo'], function () {
   this.watchFiles.include([
     './**/*.ts'
   ]);

@@ -4,36 +4,37 @@ This is a server and client for the Pattern-based Operational Transform
 protocol as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
 by Yi Xu and Chengzheng Sun [^1].
 
-I built this project with goal of better understanding the paper. It's not
-a library intended for use in production and there are a host of known
-issues with it: documents aren't stored persistently, all clients start
-out with an empty document, we don't deal with connection errors, etc.
+I'm building this project for fun with the goal of better understanding the
+paper. It's not a library intended for public use, but I'm making it public
+in case others find it interesting or the code useful.
 
-# Upcoming changes
+There aren't any known bugs in the OT control or operation algorithms, but
+it's not built to be a production-safe library. I strongly recommend
+against using it for anything serious.
 
-Priority:
+Here's a gif of it in action:
 
-- Fix broken tests!
-- Purge from the transformation map where we can so we don't indefinitely build up O(n^2) ops per client.
-- Implement string operation class instead of text character operation class.
-- Implement a tree OT type of some form. Maybe for rich text editing.
-
-Cleanup:
-
-- Make socket.io less of a dependency
-- Better logging solution so that running tests doesn't spew tons of logs
+![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/static/images/demo.gif?raw=true)
 
 # Development Setup
 
-To run tests, run `jake test` from the project root. To run the collaborative text
-editor demo, do the following:
+To get started:
 
 - Install npm by downloading and installing node.js from here: https://nodejs.org/en/
 - Open the repo folder and run `npm install`
 - In one terminal window run `jake watch`
-- In another terminal run `nodemon build/server/server.js`
+- In another terminal window run `nodemon build/server/server.js`
 - Visit `http://localhost:3000/` in a browser to see the collaborative-text demo
 
+To run tests, run `jake test` from the project root.
+
+# Things I plan to next...
+
+- Implement string operation class so that we don't generate a thousand operations
+  when you paste a thousand character strings.
+- Implement a tree OT type of some form.
+- Make socket.io less of a dependency because it doesn't guarantee strict message
+  ordering on all browsers.
 
 # Citations
 
