@@ -51,12 +51,12 @@ class OTServer {
 
   handleConnect(socket: OTSocketWrapper): void {
     socket.setSiteId(this._siteIdGen.next());
-    log('handleConnect', JSON.stringify(socket.siteId()));
+    debugLog('Server', 'handleConnect', JSON.stringify(socket.siteId()));
     socket.emit('site_id', { siteId: socket.siteId() });
   }
 
   handleDisconnect(socket: OTSocketWrapper): void {
-    log('handleDisconnect', JSON.stringify(socket.siteId()));
+    debugLog('Server', 'handleDisconnect', JSON.stringify(socket.siteId()));
     let documentId = socket.documentId();
     if (documentId !== null && documentId in this._sitesByDocumentId) {
       removeElement(this._sitesByDocumentId[documentId], documentId);
@@ -64,7 +64,7 @@ class OTServer {
   }
 
   handleDocumentConnectMessage(socket: OTSocketWrapper, msg: DocumentConnectMessage) {
-    log('handleDocumentConnectMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
+    debugLog('Server', 'handleDocumentConnectMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
 
     socket.setDocumentId(msg.documentId);
     socket.join(socket.documentId());
@@ -78,7 +78,8 @@ class OTServer {
   }
 
   handleOperationMessage(socket: OTSocketWrapper, msg: OperationMessage) {
-    log('handleOperationMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
+    debugLog('-');
+    debugLog('Server : siteId = ' + socket.siteId(), 'handleOperationMessage', JSON.stringify(msg));
     assert(socket.siteId() !== null);
     assert(socket.documentId() !== null);
 

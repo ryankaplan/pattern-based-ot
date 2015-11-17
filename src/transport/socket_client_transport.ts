@@ -42,7 +42,6 @@ class SocketClientTransport implements OTClientTransport {
     // We'll get operation notifications whenever someone in this room
     // broadcasts.
     this._socket.on('operation', (msg: OperationMessage) => {
-      log('Socket', 'handleRemoteOperation', msg);
       let textOp = new TextOp(null, null, null);
       textOp.initWithJson(msg.operation);
       handleRemoteOp(textOp);

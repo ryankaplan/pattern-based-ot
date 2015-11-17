@@ -1,7 +1,3 @@
-function log(...args:any[]):void {
-  console.log && Function.apply.call(console.log, console, arguments);
-}
-
 function fail(...args:any[]):void {
   console.log && Function.apply.call(console.log, console, arguments);
   throw "Failure!!!";
@@ -14,9 +10,23 @@ function assert(value:boolean, message:string = 'No message'):void {
   }
 }
 
+var INFO = false;
+function infoLog(...args:any[]):void {
+  var formattedArgs = ['[' + arguments[0] + ']'];
+  for (var i = 1; i < arguments.length; i++) {
+    formattedArgs.push(arguments[i]);
+  }
+  console.log && Function.apply.call(console.log, console, formattedArgs);
+}
+
+
 var DEBUG = false;
-function debug(...args:any[]):void {
+function debugLog(...args:any[]):void {
   if (DEBUG) {
-    Function.apply.call(log, null, arguments);
+    var formattedArgs = ['[' + arguments[0] + ']'];
+    for (var i = 1; i < arguments.length; i++) {
+      formattedArgs.push(arguments[i]);
+    }
+    console.log && Function.apply.call(console.log, console, formattedArgs);
   }
 }

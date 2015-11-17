@@ -117,7 +117,6 @@ describe('Pattern Based OT', () => {
     });
   });
 
-  /*
   describe('Two clients offline then resolve', () => {
     it('should work TODO(ryan)', () => {
       var initialDocument = '';
@@ -131,23 +130,22 @@ describe('Pattern Based OT', () => {
       env.client1.handleLocalOp(TextOp.Insert('a', 0));
       env.client1.handleLocalOp(TextOp.Insert('b', 1));
       env.client1.handleLocalOp(TextOp.Insert('c', 2));
-      env.client1.handleLocalOp(TextOp.Delete(0));
+      //env.client1.handleLocalOp(TextOp.Delete(0));
 
       // Client two types xyz
       env.client2.handleLocalOp(TextOp.Insert('x', 0));
-      env.client2.handleLocalOp(TextOp.Insert('y', 1));
-      env.client2.handleLocalOp(TextOp.Insert('z', 2));
+      //env.client2.handleLocalOp(TextOp.Insert('y', 1));
+      //env.client2.handleLocalOp(TextOp.Insert('z', 2));
 
-      assertEqual(env.model1.render(), 'bc');
-      assertEqual(env.model2.render(), 'xyz');
+      assertEqual(env.model1.render(), 'abc');
+      assertEqual(env.model2.render(), 'x');
 
       // Stop queueing, they should sync back up
       env.rawSocket1.setIsQueueingReceives(false);
       env.rawSocket2.setIsQueueingReceives(false);
 
-      assertEqual(env.model1.render(), 'bcxyz', 'check model 1');
-      assertEqual(env.model2.render(), 'bcxyz', 'check model 2');
+      assertEqual(env.model1.render(), 'abcx', 'check model 1');
+      assertEqual(env.model2.render(), 'abcx', 'check model 2');
     });
   });
-  */
 });

@@ -57,12 +57,12 @@ describe('Text operations', () => {
     };
   });
 
-  describe('CP2 on every pair of Text Ops on documents of length less than 5', () => {
+  describe('CP1 on every pair of Text Ops on documents of length less than 5', () => {
     it('Should not fail', () => {
       // TODO(ryan): three chars should be sufficient
       let bigString = 'vwxyz';
       for (var i = 1; i < bigString.length + 1; i++) {
-        // Validate CP2 for every combination of pairs of operations on a document
+        // Validate CP1 for every combination of pairs of operations on a document
         // of length i.
         let doc = bigString.substr(0, i);
         var pairs = allPairs(allInserts(doc, 'a'), allInserts(doc, 'b'));
@@ -199,10 +199,10 @@ describe('Text operations', () => {
       validateCP1(a, b, '2xxxxxyyyyyzzzzz');
 
       tA = a.transform(b);
-      assertEqual(tA.location(), 9);
+      assertEqual(tA.location(), null);
 
       tB = b.transform(a);
-      assertEqual(tB.location(), 9);
+      assertEqual(tB.location(), null);
     });
   });
 

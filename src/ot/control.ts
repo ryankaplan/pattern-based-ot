@@ -96,6 +96,14 @@ class OTClient {
     this._siteId = siteId;
   }
 
+  private debugLog(...args: any[]): void {
+    let myArgs = [ 'siteId : ' + this._siteId ];
+    for (var i = 0; i < arguments.length; i++) {
+      myArgs.push(arguments[i]);
+    }
+    Function.apply.call(debugLog, null, myArgs);
+  }
+
   private handleDocumentConnectedSites(connectedSites: Array<number>) {
     if (!this._connectedToDocument) {
       // We're officially connected to this document
@@ -107,8 +115,10 @@ class OTClient {
     }
 
     for (var siteId of connectedSites) {
-      // Initialize this site's transformation path
-      this.pathForSiteId(siteId);
+      if (siteId !== this._siteId) {
+        // Initialize this site's transformation path
+        this.pathForSiteId(siteId);
+      }
     }
   }
 
@@ -134,14 +144,14 @@ class OTClient {
   // This must be called for op only after every other op from
   // op.timestamp().siteId has been processed by it.
   public handleRemoteOp(op:Operation) {
-    for (var listener of this._listeners) {
-      listener.clientWillHandleRemoteOps(this._model);
-    }
-
     if (DEBUG) {
       let json = {};
       op.fillJson(json);
-      log('OTClient', 'handleRemoteOp', 'siteId is ', this._siteId, ' got operation ', JSON.stringify(json));
+      this.debugLog('handleRemoteOp called with operation' + JSON.stringify(json));
+    }
+
+    for (var listener of this._listeners) {
+      listener.clientWillHandleRemoteOps(this._model);
     }
 
     if (op.timestamp().siteId() === this._siteId) {
@@ -150,6 +160,8 @@ class OTClient {
       for (var siteId in this._transformationPathBySiteId) {
         var path = this._transformationPathBySiteId[siteId];
 
+        // Find all instances of this op in our transformation map and update
+        // them with the timestamp from the server that has a total order number
         for (var i = 0; i < path.length; i++) {
           let otherOp = path[i];
           if (otherOp.timestamp().siteId() === op.timestamp().siteId() &&
@@ -160,14 +172,15 @@ class OTClient {
       }
 
       this._lastRemoteTotalOrderingId = op.timestamp().totalOrderingId();
-      log("handleRemoteOp got operation generated locally. Returning early.");
+      this.debugLog('transformation paths ' + JSON.stringify(this._transformationPathBySiteId));
+      this.debugLog('handleRemoteOp -- operation is local. Will return.');
       return;
     }
 
-    console.log('continuing');
-
     // 1. Locate the transformation path for the corresponding site
     var path = this.pathForSiteId(op.timestamp().siteId());
+
+    this.debugLog('transformation path for this site ' + JSON.stringify(path));
 
     // 2, 3 split into L1 and L2
     var l1: Array<Operation> = [];
@@ -178,7 +191,7 @@ class OTClient {
       // If other has total ordering id less than op's remoteTotalOrderingId,
       // it means that it was executed at op's source site before op was.
       // So we can skip it.
-      if (other.timestamp().totalOrderingId() <= op.timestamp().remoteTotalOrderingId()) {
+      if (other.timestamp().totalOrderingId() !== null && other.timestamp().totalOrderingId() <= op.timestamp().remoteTotalOrderingId()) {
         continue;
       }
 
@@ -194,8 +207,13 @@ class OTClient {
       //     don't have a total order id but they will have one after op)
       //
 
+      // (b)
+      if (other.timestamp().totalOrderingId() === null) {
+        l2.push(other);
+      }
+
       // (a)
-      if (op.timestamp().remoteTotalOrderingId() < other.timestamp().totalOrderingId() &&
+      else if (op.timestamp().remoteTotalOrderingId() < other.timestamp().totalOrderingId() &&
         other.timestamp().totalOrderingId() < op.timestamp().totalOrderingId()) {
 
         if (op.timestamp().siteId() === other.timestamp().siteId()) {
@@ -204,15 +222,12 @@ class OTClient {
           continue;
         }
 
-
         l1.push(other);
       }
-
-      // (b)
-      else if (other.timestamp().totalOrderingId() === null) {
-        l2.push(other);
-      }
     }
+
+    this.debugLog('l1 : ' + JSON.stringify(l1));
+    this.debugLog('l2 : ' + JSON.stringify(l2));
 
     // 4, 5 -- transform appropriately. a 'over' b in this context means a with b
     // in its context. So 'opOverL1' means op which has been transformed to include
@@ -226,6 +241,8 @@ class OTClient {
 
     [opOverL1, l1OverOp] = symmetricListTransform(op, l1);
     [opOverL1L2, l2OverOp] = symmetricListTransform(opOverL1, l2);
+
+    this.debugLog('executing operation ' + JSON.stringify(opOverL1L2));
 
     // 6. Execute tOp locally
     this._model.execute(opOverL1L2);
@@ -254,7 +271,7 @@ class OTClient {
 
       var i = 0;
       for (; i < path.length; i++) {
-        if (path[i].timestamp().totalOrderingId() < op.timestamp().totalOrderingId()) {
+        if (path[i].timestamp().totalOrderingId() !== null && path[i].timestamp().totalOrderingId() < op.timestamp().totalOrderingId()) {
           newPath.push(path[i]);
         } else {
           break;
@@ -271,7 +288,6 @@ class OTClient {
       this._transformationPathBySiteId[siteId] = newPath;
     }
 
-    console.log(this._listeners);
     for (var listener of this._listeners) {
       listener.clientDidHandleRemoteOps(this._model);
     }

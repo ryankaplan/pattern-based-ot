@@ -74,8 +74,8 @@ directory(BUILD_TEST);
 desc('This compiles and runs all tests');
 task('test', [BUILD_TEST], function () {
   var sources = [
-    'test/ot/test_control.ts',
-    'test/ot/test_text.ts'
+    'test/ot/test_control.ts'
+    , 'test/ot/test_text.ts'
   ];
   var output = path.join(BUILD_TEST, 'test.js');
   buildTypescriptFiles(sources, output, function () {

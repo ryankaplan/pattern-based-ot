@@ -103,20 +103,19 @@ class TextOp extends Operation {
       let jsonOther = {};
       other.fillJson(jsonOther);
 
-      debug('About to transform operations');
-      debug('This: ', jsonThis);
-      debug('Other: ', other);
+      debugLog('About to transform operations');
+      debugLog('This: ', JSON.stringify(jsonThis));
+      debugLog('Other: ', JSON.stringify(other));
     }
 
     if (this.isNoop() || other.isNoop()) {
+      console.log('TextOp', 'Returning Noop from transform');
       return copy;
     }
 
     let locationRelation = compare(this.location(), other.location());
 
     if (this.isInsert() && other.isInsert()) {
-      debug('Insert vs. Insert. locationRelation = ', locationRelation);
-
       if (locationRelation == ComparisonResult.GREATER_THAN) {
         copy._location += 1;
       } else if (locationRelation == ComparisonResult.EQUAL && this._char > other._char) {
@@ -125,8 +124,6 @@ class TextOp extends Operation {
     }
 
     else if (this.isDelete() && other.isInsert()) {
-      debug('Delete vs. Insert. locationRelation = ', locationRelation);
-
       // Insert operations are applied before delete operations when there's a location tie
       if (locationRelation == ComparisonResult.GREATER_THAN || locationRelation == ComparisonResult.EQUAL) {
         copy._location += 1;
@@ -134,7 +131,6 @@ class TextOp extends Operation {
     }
 
     else if (this.isInsert() && other.isDelete()) {
-      debug('Insert vs. Delete. locationRelation = ', locationRelation);
 
       // Insert operations are applied before delete operations when there's a location tie
       if (locationRelation == ComparisonResult.GREATER_THAN) {
@@ -143,12 +139,11 @@ class TextOp extends Operation {
     }
 
     else if (this.isDelete() && other.isDelete) {
-      debug('Delete vs. Delete. locationRelation = ', locationRelation);
-      if (locationRelation == ComparisonResult.GREATER_THAN || locationRelation == ComparisonResult.EQUAL) {
+      if (locationRelation == ComparisonResult.LESS_THAN) {
+        // Do nothing
+      } else if (locationRelation == ComparisonResult.GREATER_THAN) {
         copy._location -= 1;
-      }
-
-      if (copy._location === -1) {
+      } else {
         copy = TextOp.Noop();
       }
 
@@ -158,12 +153,8 @@ class TextOp extends Operation {
       fail("Unrecognized operation types " + this.type() + " " + other.type());
     }
 
-    if (DEBUG) {
-      let tJson = {};
-      copy.fillJson(tJson);
-      debug('Transform result: ', tJson);
-    }
 
+    debugLog('TextOp', 'Returning from transform ' + JSON.stringify(copy));
     return copy;
   }
 }

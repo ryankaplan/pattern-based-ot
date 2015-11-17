@@ -44,7 +44,7 @@ class MockRawServerSocket implements RawServerSocket {
     if (type in this._callbackByEvt) {
       this._callbackByEvt[type](obj);
     } else {
-      log('No callback found in MockRawServerSocket for type ' + type);
+      infoLog('No callback found in MockRawServerSocket for type ' + type);
     }
   }
 
@@ -79,6 +79,7 @@ class MockRawClientSocket implements RawClientSocket {
 
   setIsQueueingSends(isQueueing: boolean) {
     if (isQueueing === this._isQueueingSends) { return; }
+    this._isQueueingSends = isQueueing;
 
     if (!isQueueing) {
       // flush sends
@@ -87,15 +88,18 @@ class MockRawClientSocket implements RawClientSocket {
       }
       this._queuedSends = [];
     }
-
-    this._isQueueingSends = isQueueing;
   }
 
   setIsQueueingReceives(isQueueing: boolean) {
     if (isQueueing === this._isQueueingReceives) { return; }
+    this._isQueueingReceives = isQueueing;
 
-    if (!isQueueing) {
+    if (isQueueing) {
+      debugLog("MockRawClientSocket", "Start queuing ops");
+
+    } else {
       // flush receives
+      debugLog("MockRawClientSocket", 'FLUSHING ' + this._queuedReceives + ' ops');
       for (var msg of this._queuedReceives) {
         if (msg.type in this._callbackByEvt) {
           this._callbackByEvt[msg.type](msg.value);
@@ -105,8 +109,6 @@ class MockRawClientSocket implements RawClientSocket {
       }
       this._queuedReceives = [];
     }
-
-    this._isQueueingReceives = isQueueing;
   }
 
   handleMessageFromServer(type: string, obj: any) {
