@@ -33,11 +33,13 @@ To run tests, run `jake test` from the project root.
 
 # Things I plan to next...
 
+- Make socket.io less of a dependency because it doesn't guarantee strict message
+  ordering on all browsers.
+- Make it so that all clients don't have to join an empty document for them to work.
+- Some basic form of undo/redo.
 - Implement string operation class so that we don't generate a thousand operations
   when you paste a thousand character strings.
 - Implement a tree OT type of some form.
-- Make socket.io less of a dependency because it doesn't guarantee strict message
-  ordering on all browsers.
 
 # Citations
 
