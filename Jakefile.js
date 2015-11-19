@@ -47,7 +47,7 @@ var BUILD_TEST = path.join(BUILD, 'test');
 
 directory(BUILD_SERVER);
 desc('This builds the server and puts it at \'' + BUILD_SERVER + '\'');
-task('build-server', [BUILD_SERVER], function () {
+task('server', [BUILD_SERVER], function () {
   buildTypescriptFiles(
     ['src/server/server.ts'],
     path.join(BUILD_SERVER, 'server.js'), function () {
@@ -88,11 +88,11 @@ task('test', [BUILD_TEST], function () {
 });
 
 desc('Build all')
-task('all', ['build-server', 'demo'], function () {
+task('all', ['server', 'demo'], function () {
 });
 
 desc('Watch and build the server and teh demo')
-watchTask(['build-server', 'demo'], function () {
+watchTask(['server', 'demo'], function () {
   this.watchFiles.include([
     './**/*.ts'
   ]);

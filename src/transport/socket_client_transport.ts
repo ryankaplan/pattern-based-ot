@@ -29,7 +29,7 @@ class SocketClientTransport implements OTClientTransport {
     this._socket.on('site_id', (msg: SiteIdMessage) => {
       this._siteId = msg.siteId;
       handleSiteId(msg.siteId);
-      this._socket.emit('document_connect', { documentId: documentId });
+      this._socket.emit('document_connect', new DocumentConnectMessage(documentId));
     });
 
     // Then it will tell us who else is connected on this document.
@@ -43,7 +43,7 @@ class SocketClientTransport implements OTClientTransport {
     // broadcasts.
     this._socket.on('operation', (msg: OperationMessage) => {
       let textOp = new TextOp(null, null, null);
-      textOp.initWithJson(msg.operation);
+      textOp.initWithJson(msg.jsonOp);
       handleRemoteOp(textOp);
     });
 
@@ -56,8 +56,6 @@ class SocketClientTransport implements OTClientTransport {
     let jsonOp = {};
     operation.fillJson(jsonOp);
 
-    let msg: OperationMessage = <OperationMessage>{};
-    msg.operation = jsonOp;
-    this._socket.emit('operation', msg);
+    this._socket.emit('operation', new OperationMessage(jsonOp));
   }
 }

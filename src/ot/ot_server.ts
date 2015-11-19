@@ -52,7 +52,7 @@ class OTServer {
   handleConnect(socket: OTSocketWrapper): void {
     socket.setSiteId(this._siteIdGen.next());
     debugLog('Server', 'handleConnect', JSON.stringify(socket.siteId()));
-    socket.emit('site_id', { siteId: socket.siteId() });
+    socket.emit('site_id', new SiteIdMessage(socket.siteId()));
   }
 
   handleDisconnect(socket: OTSocketWrapper): void {
@@ -72,9 +72,8 @@ class OTServer {
     // TODO(ryan): verify that it's not in here already
     this.sitesForDocumentId(socket.documentId()).push(socket.siteId());
 
-    this._io.send(socket.documentId(), 'document_connections', {
-      connectedSites: this.sitesForDocumentId(socket.documentId())
-    });
+    let sendMsg = new DocumentConnectionsMessage(this.sitesForDocumentId(socket.documentId()));
+    this._io.send(socket.documentId(), 'document_connections', sendMsg);
   }
 
   handleOperationMessage(socket: OTSocketWrapper, msg: OperationMessage) {
@@ -84,7 +83,7 @@ class OTServer {
     assert(socket.documentId() !== null);
 
     // Forward the message along ot other clients in the room
-    msg.operation.timestamp['totalOrderingId'] = this._totalOrderingGen.next();
+    msg.jsonOp.timestamp['totalOrderingId'] = this._totalOrderingGen.next();
     this._io.send(socket.documentId(), 'operation', msg);
   }
 }

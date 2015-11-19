@@ -9,18 +9,45 @@
 //
 // Then clients often send OperationMessages to each other via the server.
 
-interface SiteIdMessage {
-  siteId: number;
+enum MessageType {
+  SITE_ID,
+  DOCUMENT_CONNECT,
+  DOCUMENT_CONNECTIONS,
+  OPERATION
 }
 
-interface DocumentConnectMessage {
-  documentId: string;
+interface IMessage {
+  type: MessageType;
 }
 
-interface DocumentConnectionsMessage {
-  connectedSites: Array<number>;
+class SiteIdMessage implements IMessage {
+  type: MessageType = MessageType.SITE_ID;
+
+  constructor(
+    public siteId: number
+  ) {}
 }
 
-interface OperationMessage {
-  operation: any;
+class DocumentConnectMessage implements IMessage {
+  type: MessageType = MessageType.DOCUMENT_CONNECT;
+
+  constructor(
+    public documentId: string
+  ) {}
+}
+
+class DocumentConnectionsMessage implements IMessage {
+  type: MessageType = MessageType.DOCUMENT_CONNECT;
+
+  constructor(
+    public connectedSites: Array<number>
+  ) {}
+}
+
+class OperationMessage implements IMessage {
+  type: MessageType = MessageType.OPERATION;
+
+  constructor(
+    public jsonOp: any
+  ) {}
 }
