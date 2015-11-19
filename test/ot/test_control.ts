@@ -130,12 +130,9 @@ describe('Pattern Based OT', () => {
       env.client1.handleLocalOp(TextOp.Insert('a', 0));
       env.client1.handleLocalOp(TextOp.Insert('b', 1));
       env.client1.handleLocalOp(TextOp.Insert('c', 2));
-      //env.client1.handleLocalOp(TextOp.Delete(0));
 
       // Client two types xyz
       env.client2.handleLocalOp(TextOp.Insert('x', 0));
-      //env.client2.handleLocalOp(TextOp.Insert('y', 1));
-      //env.client2.handleLocalOp(TextOp.Insert('z', 2));
 
       assertEqual(env.model1.render(), 'abc');
       assertEqual(env.model2.render(), 'x');
