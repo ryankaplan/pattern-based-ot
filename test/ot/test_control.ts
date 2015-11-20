@@ -10,7 +10,14 @@
 /// <reference path='mock_server.ts' />
 /// <reference path='../test.ts' />
 
-function setupTest(initialDocumentContent: string, documentId: string = 'docId') {
+interface TestClient {
+  model: TextOperationModel;
+  rawSocket: MockRawClientSocket;
+  clientSocket: SocketClientTransport;
+  ot: OTClient;
+}
+
+function setupTest(initialDocumentContent: string, documentId: string, numClients: number) {
   let mockSocketServer = new MockSocketServer();
   let server = new OTServer(mockSocketServer);
 
@@ -36,113 +43,106 @@ function setupTest(initialDocumentContent: string, documentId: string = 'docId')
   });
   // END TODO
 
-  let model1 = new TextOperationModel(initialDocumentContent);
-  let rawSocket1 = new MockRawClientSocket(mockSocketServer);
-  let clientSocket1 = new SocketClientTransport(rawSocket1);
-  let client1 = new OTClient(clientSocket1, documentId, model1);
-  client1.connect();
+  let clients: Array<any> = [];
 
-  let model2 = new TextOperationModel(initialDocumentContent);
-  let rawSocket2 = new MockRawClientSocket(mockSocketServer);
-  let clientSocket2 = new SocketClientTransport(rawSocket2);
-  let client2 = new OTClient(clientSocket2, documentId, model2);
-  client2.connect();
+  for (let i = 0; i < numClients; i++) {
+    let model = new TextOperationModel(initialDocumentContent);
+    let rawSocket = new MockRawClientSocket(mockSocketServer);
+    let clientSocket = new SocketClientTransport(rawSocket);
+    let client = new OTClient(clientSocket, documentId, model);
+    client.connect();
 
-  return {
-    socketServer: mockSocketServer,
-    otServer: server,
+    clients.push({
+      model: model,
+      rawSocket: rawSocket,
+      clientSocket: clientSocket,
+      ot: client
+    });
+  }
 
-    model1: model1,
-    rawSocket1: rawSocket1,
-    clientSocket1: clientSocket1,
-    client1: client1,
-
-    model2: model2,
-    rawSocket2: rawSocket2,
-    clientSocket2: clientSocket2,
-    client2: client2
-  };
+  return clients;
 }
 
 describe('Pattern Based OT', () => {
   describe('Simple multi-client insert and delete', () => {
     it('should work TODO(ryan)', () => {
       let initialDocument = '';
-      let env = setupTest(initialDocument);
+      let clients = setupTest(initialDocument, 'docId', 2);
 
-      env.client1.handleLocalOp(TextOp.Insert('a', 0));
-      env.client1.handleLocalOp(TextOp.Insert('b', 1));
-      env.client1.handleLocalOp(TextOp.Insert('c', 2));
-      env.client1.handleLocalOp(TextOp.Delete(0));
+      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
+      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
+      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
+      clients[0].ot.handleLocalOp(TextOp.Delete(0));
 
-      assertEqual(env.model1.render(), 'bc');
-      assertEqual(env.model2.render(), 'bc');
+      assertEqual(clients[0].model.render(), 'bc');
+      assertEqual(clients[1].model.render(), 'bc');
 
-      env.client2.handleLocalOp(TextOp.Insert('a', 1));
-      env.client2.handleLocalOp(TextOp.Delete(0));
+      clients[1].ot.handleLocalOp(TextOp.Insert('a', 1));
+      clients[1].ot.handleLocalOp(TextOp.Delete(0));
 
-      assertEqual(env.model1.render(), 'ac');
-      assertEqual(env.model2.render(), 'ac');
+      assertEqual(clients[0].model.render(), 'ac');
+      assertEqual(clients[1].model.render(), 'ac');
     });
   });
 
   describe('Single client offline then resolve', () => {
     it('should work TODO(ryan)', () => {
       var initialDocument = '';
-      let env = setupTest(initialDocument);
+      let clients = setupTest(initialDocument, 'docId', 2);
 
       // Start queueing operations for site id 2
-      env.rawSocket2.setIsQueueingReceives(true);
+      clients[1].rawSocket.setIsQueueingReceives(true);
 
       // Client one types abc then deletes a
-      env.client1.handleLocalOp(TextOp.Insert('a', 0));
-      env.client1.handleLocalOp(TextOp.Insert('b', 1));
-      env.client1.handleLocalOp(TextOp.Insert('c', 2));
-      env.client1.handleLocalOp(TextOp.Delete(0));
+      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
+      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
+      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
+      clients[0].ot.handleLocalOp(TextOp.Delete(0));
 
-      assertEqual(env.model1.render(), 'bc', 'model1 should have executed all local ops');
-      assertEqual(env.model2.render(), '', 'model2 shouldn\'t have executed anything');
+      assertEqual(clients[0].model.render(), 'bc', 'model1 should have executed all local ops');
+      assertEqual(clients[1].model.render(), '', 'model2 shouldn\'t have executed anything');
 
       // Client two types xyz
-      env.client2.handleLocalOp(TextOp.Insert('x', 0));
-      env.client2.handleLocalOp(TextOp.Insert('y', 1));
-      env.client2.handleLocalOp(TextOp.Insert('z', 2));
+      clients[1].ot.handleLocalOp(TextOp.Insert('x', 0));
+      clients[1].ot.handleLocalOp(TextOp.Insert('y', 1));
+      clients[1].ot.handleLocalOp(TextOp.Insert('z', 2));
 
-      assertEqual(env.model1.render(), 'bcxyz', 'model1 should have executed all ops since it\'s online');
-      assertEqual(env.model2.render(), 'xyz', 'model2 should have executed only local ops since it\'s offline');
+      assertEqual(clients[0].model.render(), 'bcxyz', 'model1 should have executed all ops since it\'s online');
+      assertEqual(clients[1].model.render(), 'xyz', 'model2 should have executed only local ops since it\'s offline');
 
       // Stop queueing, they should sync back up
-      env.rawSocket2.setIsQueueingReceives(false);
-      assertEqual(env.model2.render(), 'bcxyz', 'model2 should match model 1 now that it\'s back online');
+      clients[1].rawSocket.setIsQueueingReceives(false);
+      assertEqual(clients[1].model.render(), 'bcxyz', 'model2 should match model 1 now that it\'s back online');
     });
   });
 
   describe('Two clients offline then resolve', () => {
     it('should work TODO(ryan)', () => {
       var initialDocument = '';
-      let env = setupTest(initialDocument);
+      let clients = setupTest(initialDocument, 'docId', 2);
 
       // Start queueing operations for site id 2
-      env.rawSocket1.setIsQueueingReceives(true);
-      env.rawSocket2.setIsQueueingReceives(true);
+      clients[0].rawSocket.setIsQueueingReceives(true);
+      clients[1].rawSocket.setIsQueueingReceives(true);
 
       // Client one types abc then deletes a
-      env.client1.handleLocalOp(TextOp.Insert('a', 0));
-      env.client1.handleLocalOp(TextOp.Insert('b', 1));
-      env.client1.handleLocalOp(TextOp.Insert('c', 2));
+      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
+      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
+      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
 
       // Client two types xyz
-      env.client2.handleLocalOp(TextOp.Insert('x', 0));
+      clients[1].ot.handleLocalOp(TextOp.Insert('x', 0));
 
-      assertEqual(env.model1.render(), 'abc');
-      assertEqual(env.model2.render(), 'x');
+      assertEqual(clients[0].model.render(), 'abc');
+      assertEqual(clients[1].model.render(), 'x');
 
       // Stop queueing, they should sync back up
-      env.rawSocket1.setIsQueueingReceives(false);
-      env.rawSocket2.setIsQueueingReceives(false);
+      clients[0].rawSocket.setIsQueueingReceives(false);
+      clients[1].rawSocket.setIsQueueingReceives(false);
 
-      assertEqual(env.model1.render(), 'abcx', 'check model 1');
-      assertEqual(env.model2.render(), 'abcx', 'check model 2');
+      assertEqual(clients[0].model.render(), 'abcx', 'check model 1');
+      assertEqual(clients[1].model.render(), 'abcx', 'check model 2');
     });
   });
+
 });
