@@ -109,7 +109,6 @@ class TextOp extends Operation {
     }
 
     if (this.isNoop() || other.isNoop()) {
-      console.log('TextOp', 'Returning Noop from transform');
       return copy;
     }
 
