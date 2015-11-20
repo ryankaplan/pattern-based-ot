@@ -145,4 +145,48 @@ describe('Pattern Based OT', () => {
     });
   });
 
+  describe('Simple test case with three clients', () => {
+    it('should work TODO(ryan)', () => {
+      var initialDocument = '';
+      let clients = setupTest(initialDocument, 'docId', 3);
+
+      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
+      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
+      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
+      clients[0].ot.handleLocalOp(TextOp.Delete(0));
+
+      for (var i = 0; i < clients.length; i++) {
+        assertEqual(clients[i].model.render(), 'bc', 'fail');
+        clients[i].rawSocket.setIsQueueingReceives(true);
+      }
+
+      clients[0].ot.handleLocalOp(TextOp.Insert('q', 1));
+      clients[0].ot.handleLocalOp(TextOp.Insert('r', 2));
+      clients[0].ot.handleLocalOp(TextOp.Delete(1));
+
+      assertEqual(clients[0].model.render(), 'brc', 'fail');
+
+      clients[1].ot.handleLocalOp(TextOp.Delete(0));
+      clients[1].ot.handleLocalOp(TextOp.Insert('a', 0));
+      clients[1].ot.handleLocalOp(TextOp.Insert('b', 2));
+
+      assertEqual(clients[1].model.render(), 'acb', 'fail');
+
+      clients[2].ot.handleLocalOp(TextOp.Delete(0));
+      clients[2].ot.handleLocalOp(TextOp.Delete(0));
+      clients[2].ot.handleLocalOp(TextOp.Insert('n', 0));
+      clients[2].ot.handleLocalOp(TextOp.Insert('o', 1));
+      clients[2].ot.handleLocalOp(TextOp.Insert('m', 2));
+
+      assertEqual(clients[2].model.render(), 'nom', 'fail');
+
+      for (var i = 0; i < clients.length; i++) {
+        clients[i].rawSocket.setIsQueueingReceives(false);
+      }
+
+      assertEqual(clients[0].model.render(), clients[1].model.render(), 'fail');
+      assertEqual(clients[1].model.render(), clients[2].model.render(), 'fail');
+    });
+  });
+
 });

@@ -144,7 +144,9 @@ class TextOp extends Operation {
       } else if (locationRelation == ComparisonResult.GREATER_THAN) {
         copy._location -= 1;
       } else {
-        copy = TextOp.Noop();
+        copy._type = Type.NOOP;
+        copy._char = null;
+        copy._location = null;
       }
 
       // if the location is equal, these ops commute
