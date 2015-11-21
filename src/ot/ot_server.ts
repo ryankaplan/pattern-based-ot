@@ -39,7 +39,7 @@ function connectServerSocket(otServer: OTServer, rawSocket: RawServerSocket) {
   let socket = new OTSocketWrapper(rawSocket);
 
   socket.on('ready', function () {
-    otServer.handleConnect(socket);
+    otServer.handleReady(socket);
   });
 
   socket.on('disconnect', function () {
@@ -59,15 +59,18 @@ class OpenDocumentState {
   private _docId: string;
   private _toGen = new IDGenerator();
   private _connectedSites: Array<number> = [];
+  private _messageHistory: Array<IMessage> = [];
 
   // const functions
   docId(): string { return this._docId; }
   connectedSites(): Array<number> { return this._connectedSites; }
+  messages(): Array<IMessage> { return this._messageHistory; }
 
   // non-const functions
   nextTotalOrderingId(): number { return this._toGen.next(); }
   addConnectedSite(siteId: number) { addElementIfMissing(this._connectedSites, siteId); }
   removeConnectedSite(siteId: number) { removeElement(this._connectedSites, siteId); }
+  appendMessage(msg: IMessage) { this._messageHistory.push(msg); }
 }
 
 class OTServer {
@@ -83,7 +86,7 @@ class OTServer {
     return this._docStateById[documentId];
   }
 
-  handleConnect(socket: OTSocketWrapper): void {
+  handleReady(socket: OTSocketWrapper): void {
     socket.setSiteId(this._siteIdGen.next());
     debugLog('Server', 'handleConnect', JSON.stringify(socket.siteId()));
     socket.emit('site_id', new SiteIdMessage(socket.siteId()));
@@ -99,15 +102,24 @@ class OTServer {
 
   handleDocumentConnectMessage(socket: OTSocketWrapper, msg: DocumentConnectMessage) {
     debugLog('Server', 'handleDocumentConnectMessage', JSON.stringify(socket.siteId()), JSON.stringify(msg));
-
     socket.setDocumentId(msg.documentId);
     socket.join(socket.documentId());
+    let docState = this.docStateForId(socket.documentId());
 
-    this.docStateForId(socket.documentId()).addConnectedSite(socket.siteId());
+    docState.addConnectedSite(socket.siteId());
 
-    let connectedSites = this.docStateForId(socket.documentId()).connectedSites();
-    let sendMsg = new DocumentConnectionsMessage(connectedSites);
-    this._io.send(socket.documentId(), 'document_connections', sendMsg);
+    // First send down every message ever sent to this open document.
+    //
+    // TODO(ryan): This is a potentially expensive operation that blocks us from responding
+    // to other clients. We should use an Ajax request to do this since it doesn't even need
+    // to hit the same server at websocket messages.
+    for (var message of docState.messages()) {
+      socket.emit(message.type.value, message);
+    }
+
+    let dcMessage = new DocumentConnectionsMessage(docState.connectedSites());
+    docState.appendMessage(dcMessage);
+    this._io.send(socket.documentId(), 'document_connections', dcMessage);
   }
 
   handleOperationMessage(socket: OTSocketWrapper, msg: OperationMessage) {
@@ -119,6 +131,7 @@ class OTServer {
     // Forward the message along ot other clients in the room
     let docState = this.docStateForId(socket.documentId());
     msg.jsonOp.timestamp['totalOrderingId'] = docState.nextTotalOrderingId();
+    docState.appendMessage(msg);
     this._io.send(socket.documentId(), 'operation', msg);
   }
 }

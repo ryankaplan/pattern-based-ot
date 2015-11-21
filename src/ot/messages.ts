@@ -13,7 +13,7 @@ class MessageType {
   constructor(public value: string){ }
   toString(){ return this.value; }
 
-  static CLIENT_IS_READY = new MessageType('client_is_ready');
+  static CLIENT_IS_READY = new MessageType('ready');
   static SITE_ID = new MessageType('site_id');
   static DOCUMENT_CONNECT = new MessageType('document_connect');
   static DOCUMENT_CONNECTIONS = new MessageType('document_connections');
@@ -41,7 +41,7 @@ class DocumentConnectMessage implements IMessage {
 }
 
 class DocumentConnectionsMessage implements IMessage {
-  type: MessageType = MessageType.DOCUMENT_CONNECT;
+  type: MessageType = MessageType.DOCUMENT_CONNECTIONS;
 
   constructor(
     public connectedSites: Array<number>
