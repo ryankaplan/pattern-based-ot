@@ -35,18 +35,32 @@ class OTSocketWrapper {
   on(evt: string, func: (obj: any) => void) { this._socket.on(evt, func); }
 }
 
+class OpenDocumentState {
+  private _docId: string;
+  private _toGen = new IDGenerator();
+  private _connectedSites: Array<number> = [];
+
+  // const functions
+  docId(): string { return this._docId; }
+  connectedSites(): Array<number> { return this._connectedSites; }
+
+  // non-const functions
+  nextTotalOrderingId(): number { return this._toGen.next(); }
+  addConnectedSite(siteId: number) { addElementIfMissing(this._connectedSites, siteId); }
+  removeConnectedSite(siteId: number) { removeElement(this._connectedSites, siteId); }
+}
+
 class OTServer {
   private _siteIdGen = new IDGenerator();
-  private _totalOrderingGen = new IDGenerator();
-  private _sitesByDocumentId: { [documentId: string]: Array<number> } = {};
+  private _docStateById: { [docId: string]: OpenDocumentState } = {};
 
   constructor(private _io: OTSocketServer) {}
 
-  private sitesForDocumentId(documentId: string): Array<number> {
-    if (!(documentId in this._sitesByDocumentId)) {
-      this._sitesByDocumentId[documentId] = [];
+  private docStateForId(documentId: string): OpenDocumentState {
+    if (!(documentId in this._docStateById)) {
+      this._docStateById[documentId] = new OpenDocumentState();
     }
-    return this._sitesByDocumentId[documentId];
+    return this._docStateById[documentId];
   }
 
   handleConnect(socket: OTSocketWrapper): void {
@@ -58,8 +72,8 @@ class OTServer {
   handleDisconnect(socket: OTSocketWrapper): void {
     debugLog('Server', 'handleDisconnect', JSON.stringify(socket.siteId()));
     let documentId = socket.documentId();
-    if (documentId !== null && documentId in this._sitesByDocumentId) {
-      removeElement(this._sitesByDocumentId[documentId], documentId);
+    if (documentId !== null) {
+      this.docStateForId(socket.documentId()).removeConnectedSite(socket.siteId());
     }
   }
 
@@ -69,10 +83,10 @@ class OTServer {
     socket.setDocumentId(msg.documentId);
     socket.join(socket.documentId());
 
-    // TODO(ryan): verify that it's not in here already
-    this.sitesForDocumentId(socket.documentId()).push(socket.siteId());
+    this.docStateForId(socket.documentId()).addConnectedSite(socket.siteId());
 
-    let sendMsg = new DocumentConnectionsMessage(this.sitesForDocumentId(socket.documentId()));
+    let connectedSites = this.docStateForId(socket.documentId()).connectedSites();
+    let sendMsg = new DocumentConnectionsMessage(connectedSites);
     this._io.send(socket.documentId(), 'document_connections', sendMsg);
   }
 
@@ -83,7 +97,8 @@ class OTServer {
     assert(socket.documentId() !== null);
 
     // Forward the message along ot other clients in the room
-    msg.jsonOp.timestamp['totalOrderingId'] = this._totalOrderingGen.next();
+    let docState = this.docStateForId(socket.documentId());
+    msg.jsonOp.timestamp['totalOrderingId'] = docState.nextTotalOrderingId();
     this._io.send(socket.documentId(), 'operation', msg);
   }
 }

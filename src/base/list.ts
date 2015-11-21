@@ -12,3 +12,12 @@ function removeElement(arr: Array<any>, element: any) {
     arr.splice(index, 1);
   }
 }
+
+function addElementIfMissing(arr: Array<any>, element: any) {
+  for (var elt of arr) {
+    if (element === elt) {
+      return;
+    }
+  }
+  arr.push(element);
+}

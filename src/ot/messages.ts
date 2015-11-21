@@ -9,11 +9,15 @@
 //
 // Then clients often send OperationMessages to each other via the server.
 
-enum MessageType {
-  SITE_ID,
-  DOCUMENT_CONNECT,
-  DOCUMENT_CONNECTIONS,
-  OPERATION
+class MessageType {
+  constructor(public value: string){ }
+  toString(){ return this.value; }
+
+  static CLIENT_IS_READY = new MessageType('client_is_ready');
+  static SITE_ID = new MessageType('site_id');
+  static DOCUMENT_CONNECT = new MessageType('document_connect');
+  static DOCUMENT_CONNECTIONS = new MessageType('document_connections');
+  static OPERATION = new MessageType('operation');
 }
 
 interface IMessage {
