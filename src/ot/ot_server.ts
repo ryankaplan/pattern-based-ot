@@ -35,6 +35,26 @@ class OTSocketWrapper {
   on(evt: string, func: (obj: any) => void) { this._socket.on(evt, func); }
 }
 
+function connectServerSocket(otServer: OTServer, rawSocket: RawServerSocket) {
+  let socket = new OTSocketWrapper(rawSocket);
+
+  socket.on('ready', function () {
+    otServer.handleConnect(socket);
+  });
+
+  socket.on('disconnect', function () {
+    otServer.handleDisconnect(socket);
+  });
+
+  socket.on('document_connect', function (msg: DocumentConnectMessage) {
+    otServer.handleDocumentConnectMessage(socket, msg);
+  });
+
+  socket.on('operation', function (msg: OperationMessage) {
+    otServer.handleOperationMessage(socket, msg);
+  });
+}
+
 class OpenDocumentState {
   private _docId: string;
   private _toGen = new IDGenerator();

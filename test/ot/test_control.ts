@@ -19,29 +19,10 @@ interface TestClient {
 
 function setupTest(initialDocumentContent: string, documentId: string, numClients: number) {
   let mockSocketServer = new MockSocketServer();
-  let server = new OTServer(mockSocketServer);
-
-  // TODO(ryan): factor this out since it's exactly our server code
+  let mockServer = new OTServer(mockSocketServer);
   mockSocketServer.on('connection', (socket_: RawServerSocket) => {
-    let socket = new OTSocketWrapper(socket_);
-
-    socket.on('ready', function () {
-      server.handleConnect(socket);
-    });
-
-    socket.on('disconnect', function () {
-      server.handleDisconnect(socket);
-    });
-
-    socket.on('document_connect', function (msg: DocumentConnectMessage) {
-      server.handleDocumentConnectMessage(socket, msg);
-    });
-
-    socket.on('operation', function (msg: OperationMessage) {
-      server.handleOperationMessage(socket, msg);
-    });
+    connectServerSocket(mockServer, socket_);
   });
-  // END TODO
 
   let clients: Array<any> = [];
 

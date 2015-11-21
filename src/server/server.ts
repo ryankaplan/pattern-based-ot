@@ -27,22 +27,6 @@ var socketIOServer: SocketIO.Server = require('socket.io')(httpServer);
 let server: OTServer = new OTServer(new SocketServer(socketIOServer));
 
 socketIOServer.on('connection', (socket_: SocketIO.Socket) => {
-  let socket = new OTSocketWrapper(socket_);
-
-  socket.on('ready', function () {
-    server.handleConnect(socket);
-  });
-
-  socket.on('disconnect', function () {
-    server.handleDisconnect(socket);
-  });
-
-  socket.on('document_connect', function (msg: DocumentConnectMessage) {
-    server.handleDocumentConnectMessage(socket, msg);
-  });
-
-  socket.on('operation', function (msg: OperationMessage) {
-    server.handleOperationMessage(socket, msg);
-  });
+  connectServerSocket(server, socket_);
 });
 
