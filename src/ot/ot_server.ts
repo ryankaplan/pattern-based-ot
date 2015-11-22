@@ -39,23 +39,23 @@ function connectServerSocket(otServer: OTServer, rawSocket: RawServerSocket) {
   let socket = new OTSocketWrapper(rawSocket);
 
   socket.on('message', function (rawMsg: OTMessage) {
-    switch (rawMsg.type) {
-      case MessageType.CLIENT_IS_READY:
+    switch (rawMsg.type.value) {
+      case MessageType.CLIENT_IS_READY.value:
         otServer.handleReady(socket);
         break;
 
-      case MessageType.DOCUMENT_CONNECT:
+      case MessageType.DOCUMENT_CONNECT.value:
         otServer.handleDocumentConnectMessage(socket, <DocumentConnectMessage>rawMsg);
         break;
 
-      case MessageType.OPERATION:
+      case MessageType.OPERATION.value:
         otServer.handleOperationMessage(socket, <OperationMessage>rawMsg);
         break;
 
-      case MessageType.DOCUMENT_CONNECTIONS:
-      case MessageType.SITE_ID:
-      case MessageType.INITIAL_LOAD_BEGIN:
-      case MessageType.INITIAL_LOAD_END:
+      case MessageType.DOCUMENT_CONNECTIONS.value:
+      case MessageType.SITE_ID.value:
+      case MessageType.INITIAL_LOAD_BEGIN.value:
+      case MessageType.INITIAL_LOAD_END.value:
         fail('Unexpected message on server');
         break;
     }

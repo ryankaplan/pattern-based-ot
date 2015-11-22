@@ -28,8 +28,8 @@ class SocketClientTransport implements OTClientTransport {
   ): void {
 
     this._socket.on('message', (rawMsg: OTMessage) => {
-      switch (rawMsg.type) {
-        case MessageType.SITE_ID:
+      switch (rawMsg.type.value) {
+        case MessageType.SITE_ID.value:
           // First the server will send us our site id
           let siteIdMessage = <SiteIdMessage>rawMsg;
           this._siteId = siteIdMessage.siteId;
@@ -37,17 +37,17 @@ class SocketClientTransport implements OTClientTransport {
           this._socket.emit('message', new DocumentConnectMessage(documentId));
           break;
 
-        case MessageType.CLIENT_IS_READY:
-        case MessageType.DOCUMENT_CONNECT:
-        case MessageType.INITIAL_LOAD_BEGIN:
+        case MessageType.CLIENT_IS_READY.value:
+        case MessageType.DOCUMENT_CONNECT.value:
+        case MessageType.INITIAL_LOAD_BEGIN.value:
           handleInitialLoadBegin();
           break;
 
-        case MessageType.INITIAL_LOAD_END:
+        case MessageType.INITIAL_LOAD_END.value:
           handleInitialLoadEnd();
           break;
 
-        case MessageType.DOCUMENT_CONNECTIONS:
+        case MessageType.DOCUMENT_CONNECTIONS.value:
           // Then it will tell us who else is connected on this document.
           // This will also be called every time someone new joins.
           let dcMessage = <DocumentConnectionsMessage>rawMsg;
@@ -55,7 +55,7 @@ class SocketClientTransport implements OTClientTransport {
           handleConnectedClients(dcMessage.connectedSites);
           break;
 
-        case MessageType.OPERATION:
+        case MessageType.OPERATION.value:
           // We'll get operation notifications whenever someone in this room
           // broadcasts.
           let msg = <OperationMessage>rawMsg;
