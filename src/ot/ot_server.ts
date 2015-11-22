@@ -113,9 +113,11 @@ class OTServer {
     // TODO(ryan): This is a potentially expensive operation that blocks us from responding
     // to other clients. We should use an Ajax request to do this since it doesn't even need
     // to hit the same server at websocket messages.
+    socket.emit(MessageType.INITIAL_LOAD_BEGIN.value, null);
     for (var message of docState.messages()) {
       socket.emit(message.type.value, message);
     }
+    socket.emit(MessageType.INITIAL_LOAD_END.value, null);
 
     let dcMessage = new DocumentConnectionsMessage(docState.connectedSites());
     docState.appendMessage(dcMessage);

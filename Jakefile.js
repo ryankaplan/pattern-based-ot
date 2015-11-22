@@ -62,7 +62,7 @@ task('copy-static', [BUILD_WWW], function () {
 });
 
 desc('Builds the demo')
-task('demo', ['copy-static'], function () {
+task('demo', ['copy-static', 'server'], function () {
   buildTypescriptFiles(
     ['src/ui/collaborative_text_controller.ts'],
     path.join(BUILD_WWW, 'static/js/collaborative-text-controller.js'), function () {

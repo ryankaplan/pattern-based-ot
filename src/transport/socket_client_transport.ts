@@ -22,7 +22,9 @@ class SocketClientTransport implements OTClientTransport {
     // which will always be called before the first call to handleRemoteOp
     handleSiteId: (siteId: number) => void,
     handleConnectedClients:(connectedClients: Array<number>) => void,
-    handleRemoteOp: (op: Operation) => void
+    handleRemoteOp: (op: Operation) => void,
+    handleInitialLoadBegin: () => void,
+    handleInitialLoadEnd: () => void
   ): void {
 
     // First the server will send us our site id
@@ -31,6 +33,9 @@ class SocketClientTransport implements OTClientTransport {
       handleSiteId(msg.siteId);
       this._socket.emit('document_connect', new DocumentConnectMessage(documentId));
     });
+
+    this._socket.on('initial_load_begin', handleInitialLoadBegin);
+    this._socket.on('initial_load_end', handleInitialLoadEnd);
 
     // Then it will tell us who else is connected on this document.
     // This will also be called every time someone new joins.

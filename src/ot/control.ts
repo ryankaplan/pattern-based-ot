@@ -32,14 +32,17 @@ interface OTClientTransport {
     // which will always be called before the first call to handleRemoteOp
     handleSiteId: (siteId: number) => void,
     handleConnectedClients:(connectedClients: Array<number>) => void,
-    handleRemoteOp: (op: Operation) => void
+    handleRemoteOp: (op: Operation) => void,
+    handleInitialLoadBegin: () => void,
+    handleInitialLoadEnd: () => void
   ): void;
 
   broadcastOperation(operation: Operation): void;
 }
 
 interface OTClientListener {
-  clientWillHandleRemoteOps(model: OperationModel): void;
+  // Called when the client receives remote ops that are *not* part
+  // of the initial document load.
   clientDidHandleRemoteOps(model: OperationModel): void;
   clientDidConnectToDocument(): void;
 }
@@ -65,6 +68,7 @@ class OTClient {
 
   private _connectHasBeenCalled: boolean = false;
   private _connectedToDocument: boolean = false;
+  private _inInitialLoad: boolean = false;
 
   constructor(
     private _transport: OTClientTransport,
@@ -83,7 +87,9 @@ class OTClient {
       this._documentId,
       this.handleSiteId.bind(this),
       this.handleDocumentConnectedSites.bind(this),
-      this.handleRemoteOp.bind(this)
+      this.handleRemoteOp.bind(this),
+      () => { this._inInitialLoad = true },
+      () => { this._inInitialLoad = false }
     );
 
     // Return this so that we can do `let client = (new OTClient).connect();`
@@ -129,10 +135,6 @@ class OTClient {
       let json = {};
       op.fillJson(json);
       this.debugLog('handleRemoteOp called with operation' + JSON.stringify(json));
-    }
-
-    for (var listener of this._listeners) {
-      listener.clientWillHandleRemoteOps(this._model);
     }
 
     if (op.timestamp().siteId() === this._siteId) {
@@ -292,8 +294,10 @@ class OTClient {
       this._transformationPathBySiteId[siteId] = newPath;
     }
 
-    for (var listener of this._listeners) {
-      listener.clientDidHandleRemoteOps(this._model);
+    if (!this._inInitialLoad) {
+      for (var listener of this._listeners) {
+        listener.clientDidHandleRemoteOps(this._model);
+      }
     }
   }
 
@@ -306,19 +310,21 @@ class OTClient {
   }
 
   private handleDocumentConnectedSites(connectedSites: Array<number>) {
-    if (!this._connectedToDocument) {
+    // Create a transformation path for every connected site.
+    // TODO(ryan): remove transformation paths for missing sites.
+    for (var siteId of connectedSites) {
+      if (siteId !== this._siteId) {
+        // Initialize this site's transformation path
+        this.pathForSiteId(siteId);
+      }
+    }
+
+    if (!this._inInitialLoad && !this._connectedToDocument) {
       // We're officially connected to this document
       this._connectedToDocument = true;
 
       for (var listener of this._listeners) {
         listener.clientDidConnectToDocument();
-      }
-    }
-
-    for (var siteId of connectedSites) {
-      if (siteId !== this._siteId) {
-        // Initialize this site's transformation path
-        this.pathForSiteId(siteId);
       }
     }
   }

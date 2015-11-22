@@ -25,22 +25,26 @@
 class CollaborativeTextController implements OTClientListener {
   private _socket = new SocketClientTransport(io());
   private _client:OTClient = null;
+  private _model: TextOperationModel = null;
 
   // jQuery wrapped div of the textarea that we're watching
-  private _textArea:any;
-  private _lastKnownDocumentContent:string;
+  private _textArea: any;
+  private _loadingMessage: any;
+  private _lastKnownDocumentContent: string;
 
-  constructor(elementSelector:string) {
-    this._textArea = $(elementSelector);
+  constructor(textAreaSelector: string, loadingElementSelector: string) {
+    this._textArea = $(textAreaSelector);
+    this._loadingMessage = $(loadingElementSelector);
     this._lastKnownDocumentContent = "";
 
     // Re-shown when we're connected
+    this._loadingMessage.show();
     this._textArea.hide();
 
-    let model = new TextOperationModel('');
+    this._model = new TextOperationModel('');
 
     let documentId = getDocumentQueryArg('documentId');
-    this._client = new OTClient(this._socket, documentId, model);
+    this._client = new OTClient(this._socket, documentId, this._model);
     this._client.addListener(this);
     this._client.connect();
   }
@@ -48,17 +52,14 @@ class CollaborativeTextController implements OTClientListener {
   // OTClientDelegate implementation
 
   clientDidConnectToDocument() {
+    this._loadingMessage.hide();
     this._textArea.show();
+
     this._textArea.attr("contentEditable", "true");
-    this._textArea.val("");
+    let documentContent = this._model.render();
+    this._textArea.val(documentContent);
     this._lastKnownDocumentContent = this._textArea.val();
     this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
-  }
-
-  clientWillHandleRemoteOps(model:OperationModel) {
-    // TODO(ryan): This will be useful when we want to batch updates and send
-    // them after a delay. We want to be sure that whenever we're about to handle
-    // remote ops that we've accounted for all recent changes in the document.
   }
 
   clientDidHandleRemoteOps(model:OperationModel) {
@@ -125,5 +126,5 @@ class CollaborativeTextController implements OTClientListener {
 
 var pageController:CollaborativeTextController = null;
 $(document).ready(function () {
-  pageController = new CollaborativeTextController("#ot-document");
+  pageController = new CollaborativeTextController("#ot-document", "#loading-message");
 });

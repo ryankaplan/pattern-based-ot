@@ -23,7 +23,7 @@ over time and maybe at some point it'll be useful to someone other than me.
 
 Here's a gif of it in action:
 
-<div style="text-align:center"><img src ="https://github.com/ryankaplan/pattern-based-ot/blob/master/src/static/images/demo.gif?raw=true" /></div>
+![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/static/images/demo.gif?raw=true)
 
 # Development Setup
 
