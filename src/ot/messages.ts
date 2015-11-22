@@ -29,7 +29,7 @@ class OTMessage {
 }
 
 class SiteIdMessage extends OTMessage {
-  constructor(public siteId: number) {
+  constructor(public siteId: string) {
     super(MessageType.SITE_ID);
   }
 }
@@ -41,7 +41,7 @@ class DocumentConnectMessage extends OTMessage {
 }
 
 class DocumentConnectionsMessage extends OTMessage {
-  constructor(public connectedSites: Array<number>) {
+  constructor(public connectedSites: Array<string>) {
     super(MessageType.DOCUMENT_CONNECTIONS);
   }
 }

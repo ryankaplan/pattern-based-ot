@@ -21,14 +21,14 @@ interface OTSocketServer {
 
 // Wraps RawServerSocket with a siteId and documentId
 class OTSocketWrapper {
-  private _siteId: number;
+  private _siteId: string;
   private _documentId: string;
   constructor(private _socket: RawServerSocket) { }
 
   documentId(): string { return this._documentId; }
   setDocumentId(documentId: string): void { this._documentId = documentId; }
-  siteId(): number { return this._siteId; }
-  setSiteId(siteId: number): void { this._siteId = siteId; }
+  siteId(): string { return this._siteId; }
+  setSiteId(siteId: string): void { this._siteId = siteId; }
 
   join(room: string) { this._socket.join(room); }
   emit(type: string, obj: any) { this._socket.emit(type, obj); }
@@ -69,18 +69,18 @@ function connectServerSocket(otServer: OTServer, rawSocket: RawServerSocket) {
 class OpenDocumentState {
   private _docId: string;
   private _toGen = new IDGenerator();
-  private _connectedSites: Array<number> = [];
+  private _connectedSites: Array<string> = [];
   private _messageHistory: Array<OTMessage> = [];
 
   // const functions
   docId(): string { return this._docId; }
-  connectedSites(): Array<number> { return this._connectedSites; }
+  connectedSites(): Array<string> { return this._connectedSites; }
   messages(): Array<OTMessage> { return this._messageHistory; }
 
   // non-const functions
   nextTotalOrderingId(): number { return this._toGen.next(); }
-  addConnectedSite(siteId: number) { addElementIfMissing(this._connectedSites, siteId); }
-  removeConnectedSite(siteId: number) { removeElement(this._connectedSites, siteId); }
+  addConnectedSite(siteId: string) { addElementIfMissing(this._connectedSites, siteId); }
+  removeConnectedSite(siteId: string) { removeElement(this._connectedSites, siteId); }
   appendMessage(msg: OTMessage) { this._messageHistory.push(msg); }
 }
 
@@ -98,7 +98,7 @@ class OTServer {
   }
 
   handleReady(socket: OTSocketWrapper): void {
-    socket.setSiteId(this._siteIdGen.next());
+    socket.setSiteId('' + this._siteIdGen.next());
     debugLog('Server', 'handleConnect', JSON.stringify(socket.siteId()));
     socket.emit('message', new SiteIdMessage(socket.siteId()));
   }

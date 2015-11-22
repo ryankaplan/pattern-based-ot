@@ -10,7 +10,7 @@ interface RawClientSocket {
 
 // Used by the client
 class SocketClientTransport implements OTClientTransport {
-  private _siteId: number = null;
+  private _siteId: string = null;
 
   // TODO(ryan): type this better
   constructor(private _socket: RawClientSocket) {}
@@ -20,8 +20,8 @@ class SocketClientTransport implements OTClientTransport {
 
     // handleSiteId will always be called before the first call to handleConnectedClients
     // which will always be called before the first call to handleRemoteOp
-    handleSiteId: (siteId: number) => void,
-    handleConnectedClients:(connectedClients: Array<number>) => void,
+    handleSiteId: (siteId: string) => void,
+    handleConnectedClients:(connectedClients: Array<string>) => void,
     handleRemoteOp: (op: Operation) => void,
     handleInitialLoadBegin: () => void,
     handleInitialLoadEnd: () => void

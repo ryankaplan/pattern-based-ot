@@ -28,8 +28,8 @@ interface OTClientTransport {
   connect(
     documentId: string,
     
-    handleSiteId: (siteId: number) => void,
-    handleConnectedClients:(connectedClients: Array<number>) => void,
+    handleSiteId: (siteId: string) => void,
+    handleConnectedClients:(connectedClients: Array<string>) => void,
     handleRemoteOp: (op: Operation) => void,
     handleInitialLoadBegin: () => void,
     handleInitialLoadEnd: () => void
@@ -48,7 +48,7 @@ interface OTClientListener {
 class OTClient {
   private _listeners:Array<OTClientListener> = [];
 
-  private _siteId: number = -1;
+  private _siteId: string = '-1';
 
   // Generates ids for operations generated at this client.
   private _siteOpIdGen = new IDGenerator();
@@ -98,7 +98,7 @@ class OTClient {
     this._listeners.push(listener);
   }
 
-  private handleSiteId(siteId: number) {
+  private handleSiteId(siteId: string) {
     this._siteId = siteId;
   }
 
@@ -201,7 +201,7 @@ class OTClient {
       else if (op.timestamp().remoteTotalOrderingId() < otherOp.timestamp().totalOrderingId() &&
                otherOp.timestamp().totalOrderingId() < op.timestamp().totalOrderingId()) {
 
-        // op.timetsamp().siteId() can't be otherOp.timestamp().siteId() by item 7 of
+        // op.timestamp().siteId() can't be otherOp.timestamp().siteId() by item 7 of
         // Remote Processing on page 11 of the paper. We don't put transformed operations
         // into the transformation path of the site that generated them.
         if (op.timestamp().siteId() === otherOp.timestamp().siteId()) {
@@ -239,8 +239,7 @@ class OTClient {
     // immediately after the last op in path whose total ordering id is less than
     // op's total ordering.
     for (var siteId in this._transformationPathBySiteId) {
-
-      if (siteId === '' + op.timestamp().siteId()) {
+      if (siteId === op.timestamp().siteId()) {
         // TODO(ryan): We don't need to build a deque here either.
         //
         // Ignore the transformation path for the client that generated the op.
@@ -307,7 +306,7 @@ class OTClient {
     Function.apply.call(debugLog, null, myArgs);
   }
 
-  private handleDocumentConnectedSites(connectedSites: Array<number>) {
+  private handleDocumentConnectedSites(connectedSites: Array<string>) {
     // Create a transformation path for every connected site.
     // TODO(ryan): remove transformation paths for missing sites.
     for (var siteId of connectedSites) {
@@ -327,7 +326,7 @@ class OTClient {
     }
   }
 
-  private pathForSiteId(siteId: number): Deque<Operation> {
+  private pathForSiteId(siteId: string): Deque<Operation> {
     if (!(siteId in this._transformationPathBySiteId)) {
       this._transformationPathBySiteId[siteId] = new Deque<Operation>();
     }

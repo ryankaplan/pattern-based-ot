@@ -4,9 +4,9 @@
 class Timestamp {
   private _totalOrderingId:number = null;
 
-  constructor(private _siteId:number,
-              private _siteOpId:number,
-              private _remoteTotalOrderingId:number) {
+  constructor(private _siteId: string,
+              private _siteOpId: number,
+              private _remoteTotalOrderingId: number) {
   }
 
   initWithJson(parsed:any):void {
@@ -49,7 +49,7 @@ class Timestamp {
     return compare(first._totalOrderingId, second._totalOrderingId);
   }
 
-  siteId():number {
+  siteId(): string {
     return this._siteId;
   }
 
