@@ -38,20 +38,31 @@ class OTSocketWrapper {
 function connectServerSocket(otServer: OTServer, rawSocket: RawServerSocket) {
   let socket = new OTSocketWrapper(rawSocket);
 
-  socket.on('ready', function () {
-    otServer.handleReady(socket);
+  socket.on('message', function (rawMsg: OTMessage) {
+    switch (rawMsg.type) {
+      case MessageType.CLIENT_IS_READY:
+        otServer.handleReady(socket);
+        break;
+
+      case MessageType.DOCUMENT_CONNECT:
+        otServer.handleDocumentConnectMessage(socket, <DocumentConnectMessage>rawMsg);
+        break;
+
+      case MessageType.OPERATION:
+        otServer.handleOperationMessage(socket, <OperationMessage>rawMsg);
+        break;
+
+      case MessageType.DOCUMENT_CONNECTIONS:
+      case MessageType.SITE_ID:
+      case MessageType.INITIAL_LOAD_BEGIN:
+      case MessageType.INITIAL_LOAD_END:
+        fail('Unexpected message on server');
+        break;
+    }
   });
 
   socket.on('disconnect', function () {
     otServer.handleDisconnect(socket);
-  });
-
-  socket.on('document_connect', function (msg: DocumentConnectMessage) {
-    otServer.handleDocumentConnectMessage(socket, msg);
-  });
-
-  socket.on('operation', function (msg: OperationMessage) {
-    otServer.handleOperationMessage(socket, msg);
   });
 }
 
@@ -59,18 +70,18 @@ class OpenDocumentState {
   private _docId: string;
   private _toGen = new IDGenerator();
   private _connectedSites: Array<number> = [];
-  private _messageHistory: Array<IMessage> = [];
+  private _messageHistory: Array<OTMessage> = [];
 
   // const functions
   docId(): string { return this._docId; }
   connectedSites(): Array<number> { return this._connectedSites; }
-  messages(): Array<IMessage> { return this._messageHistory; }
+  messages(): Array<OTMessage> { return this._messageHistory; }
 
   // non-const functions
   nextTotalOrderingId(): number { return this._toGen.next(); }
   addConnectedSite(siteId: number) { addElementIfMissing(this._connectedSites, siteId); }
   removeConnectedSite(siteId: number) { removeElement(this._connectedSites, siteId); }
-  appendMessage(msg: IMessage) { this._messageHistory.push(msg); }
+  appendMessage(msg: OTMessage) { this._messageHistory.push(msg); }
 }
 
 class OTServer {
@@ -89,7 +100,7 @@ class OTServer {
   handleReady(socket: OTSocketWrapper): void {
     socket.setSiteId(this._siteIdGen.next());
     debugLog('Server', 'handleConnect', JSON.stringify(socket.siteId()));
-    socket.emit('site_id', new SiteIdMessage(socket.siteId()));
+    socket.emit('message', new SiteIdMessage(socket.siteId()));
   }
 
   handleDisconnect(socket: OTSocketWrapper): void {
@@ -113,15 +124,15 @@ class OTServer {
     // TODO(ryan): This is a potentially expensive operation that blocks us from responding
     // to other clients. We should use an Ajax request to do this since it doesn't even need
     // to hit the same server at websocket messages.
-    socket.emit(MessageType.INITIAL_LOAD_BEGIN.value, null);
+    socket.emit('message', new OTMessage(MessageType.INITIAL_LOAD_BEGIN));
     for (var message of docState.messages()) {
-      socket.emit(message.type.value, message);
+      socket.emit('message', message);
     }
-    socket.emit(MessageType.INITIAL_LOAD_END.value, null);
+    socket.emit('message', new OTMessage(MessageType.INITIAL_LOAD_END));
 
     let dcMessage = new DocumentConnectionsMessage(docState.connectedSites());
     docState.appendMessage(dcMessage);
-    this._io.send(socket.documentId(), 'document_connections', dcMessage);
+    this._io.send(socket.documentId(), 'message', dcMessage);
   }
 
   handleOperationMessage(socket: OTSocketWrapper, msg: OperationMessage) {
@@ -134,6 +145,6 @@ class OTServer {
     let docState = this.docStateForId(socket.documentId());
     msg.jsonOp.timestamp['totalOrderingId'] = docState.nextTotalOrderingId();
     docState.appendMessage(msg);
-    this._io.send(socket.documentId(), 'operation', msg);
+    this._io.send(socket.documentId(), 'message', msg);
   }
 }

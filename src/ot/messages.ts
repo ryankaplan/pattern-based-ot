@@ -24,38 +24,30 @@ class MessageType {
   static OPERATION = new MessageType('operation');
 }
 
-interface IMessage {
-  type: MessageType;
+class OTMessage {
+  constructor(public type: MessageType) { }
 }
 
-class SiteIdMessage implements IMessage {
-  type: MessageType = MessageType.SITE_ID;
-
-  constructor(
-    public siteId: number
-  ) {}
+class SiteIdMessage extends OTMessage {
+  constructor(public siteId: number) {
+    super(MessageType.SITE_ID);
+  }
 }
 
-class DocumentConnectMessage implements IMessage {
-  type: MessageType = MessageType.DOCUMENT_CONNECT;
-
-  constructor(
-    public documentId: string
-  ) {}
+class DocumentConnectMessage extends OTMessage {
+  constructor(public documentId: string) {
+    super(MessageType.DOCUMENT_CONNECT);
+  }
 }
 
-class DocumentConnectionsMessage implements IMessage {
-  type: MessageType = MessageType.DOCUMENT_CONNECTIONS;
-
-  constructor(
-    public connectedSites: Array<number>
-  ) {}
+class DocumentConnectionsMessage extends OTMessage {
+  constructor(public connectedSites: Array<number>) {
+    super(MessageType.DOCUMENT_CONNECTIONS);
+  }
 }
 
-class OperationMessage implements IMessage {
-  type: MessageType = MessageType.OPERATION;
-
-  constructor(
-    public jsonOp: any
-  ) {}
+class OperationMessage extends OTMessage {
+  constructor(public jsonOp: any) {
+    super(MessageType.OPERATION);
+  }
 }

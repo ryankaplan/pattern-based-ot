@@ -27,40 +27,53 @@ class SocketClientTransport implements OTClientTransport {
     handleInitialLoadEnd: () => void
   ): void {
 
-    // First the server will send us our site id
-    this._socket.on('site_id', (msg: SiteIdMessage) => {
-      this._siteId = msg.siteId;
-      handleSiteId(msg.siteId);
-      this._socket.emit('document_connect', new DocumentConnectMessage(documentId));
-    });
+    this._socket.on('message', (rawMsg: OTMessage) => {
+      switch (rawMsg.type) {
+        case MessageType.SITE_ID:
+          // First the server will send us our site id
+          let siteIdMessage = <SiteIdMessage>rawMsg;
+          this._siteId = siteIdMessage.siteId;
+          handleSiteId(siteIdMessage.siteId);
+          this._socket.emit('message', new DocumentConnectMessage(documentId));
+          break;
 
-    this._socket.on('initial_load_begin', handleInitialLoadBegin);
-    this._socket.on('initial_load_end', handleInitialLoadEnd);
+        case MessageType.CLIENT_IS_READY:
+        case MessageType.DOCUMENT_CONNECT:
+        case MessageType.INITIAL_LOAD_BEGIN:
+          handleInitialLoadBegin();
+          break;
 
-    // Then it will tell us who else is connected on this document.
-    // This will also be called every time someone new joins.
-    this._socket.on('document_connections', (msg: DocumentConnectionsMessage) => {
-      if (msg.connectedSites.indexOf(this._siteId) === -1) { fail('Server thinks we\'re not in this document'); }
-      handleConnectedClients(msg.connectedSites);
-    });
+        case MessageType.INITIAL_LOAD_END:
+          handleInitialLoadEnd();
+          break;
 
-    // We'll get operation notifications whenever someone in this room
-    // broadcasts.
-    this._socket.on('operation', (msg: OperationMessage) => {
-      let textOp = new TextOp(null, null, null);
-      textOp.initWithJson(msg.jsonOp);
-      handleRemoteOp(textOp);
+        case MessageType.DOCUMENT_CONNECTIONS:
+          // Then it will tell us who else is connected on this document.
+          // This will also be called every time someone new joins.
+          let dcMessage = <DocumentConnectionsMessage>rawMsg;
+          if (dcMessage.connectedSites.indexOf(this._siteId) === -1) { fail('Server thinks we\'re not in this document'); }
+          handleConnectedClients(dcMessage.connectedSites);
+          break;
+
+        case MessageType.OPERATION:
+          // We'll get operation notifications whenever someone in this room
+          // broadcasts.
+          let msg = <OperationMessage>rawMsg;
+          let textOp = new TextOp(null, null, null);
+          textOp.initWithJson(msg.jsonOp);
+          handleRemoteOp(textOp);
+          break;
+      }
     });
 
     // Tell the server to give us our siteId
-    this._socket.emit('ready', null);
+    this._socket.emit('message', new OTMessage(MessageType.CLIENT_IS_READY));
   }
 
   // Send an operation to all other sites
   public broadcastOperation(operation: Operation):void {
     let jsonOp = {};
     operation.fillJson(jsonOp);
-
-    this._socket.emit('operation', new OperationMessage(jsonOp));
+    this._socket.emit('message', new OperationMessage(jsonOp));
   }
 }
