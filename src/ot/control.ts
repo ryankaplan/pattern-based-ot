@@ -27,9 +27,7 @@ function symmetricListTransform(op:Operation, list:Array<Operation>):Array<any> 
 interface OTClientTransport {
   connect(
     documentId: string,
-
-    // handleSiteId will always be called before the first call to handleConnectedClients
-    // which will always be called before the first call to handleRemoteOp
+    
     handleSiteId: (siteId: number) => void,
     handleConnectedClients:(connectedClients: Array<number>) => void,
     handleRemoteOp: (op: Operation) => void,
