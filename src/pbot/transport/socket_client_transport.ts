@@ -1,4 +1,4 @@
-/// <reference path='../base/logging.ts' />
+/// <reference path='../../base/logging.ts' />
 /// <reference path='../ot/control.ts' />
 /// <reference path='../ot/messages.ts' />
 /// <reference path='../ot/text.ts' />

@@ -1,19 +1,20 @@
-/// <reference path='../ot/messages.ts' />
-/// <reference path='../ot/ot_server.ts' />
-/// <reference path='../transport/socket_server.ts' />
-/// <reference path='../typings/node/node.d.ts' />
-/// <reference path='../typings/socket.io/socket.io.d.ts' />
+/// <reference path='../../pbot/ot/messages.ts' />
+/// <reference path='../../pbot/ot/ot_server.ts' />
+/// <reference path='../../pbot/transport/socket_server.ts' />
+/// <reference path='../../pbot/typings/node/node.d.ts' />
+/// <reference path='../../pbot/typings/socket.io/socket.io.d.ts' />
 
 var express = require('express');
 var app = express();
 var httpServer = require('http').Server(app);
 
 // Serve data out of /static
-app.use(express.static(__dirname + '/../../'));
+console.log(__dirname + '/static');
+app.use(express.static(__dirname + '/static'));
 
 app.get('/', function (req: any, res: any) {
   res.writeHead(302, {
-    'Location': '/build/www/static/html/collaborative-text-editor.html?documentId=' + randomString(6, ALPHA_NUMERIC)
+    'Location': '/html/index.html?documentId=' + randomString(6, ALPHA_NUMERIC)
   });
   res.end();
 });

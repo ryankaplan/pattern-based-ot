@@ -1,7 +1,7 @@
 /// <reference path='../typings/mocha.d.ts' />
 
 /// <reference path='../../src/base/lang.ts' />
-/// <reference path='../../src/ot/text.ts' />
+/// <reference path='../../src/pbot/ot/text.ts' />
 
 /// <reference path='ot_test_helpers.ts' />
 /// <reference path='../test.ts' />

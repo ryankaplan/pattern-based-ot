@@ -1,7 +1,6 @@
 /// <reference path='operation.ts' />
-
-/// <reference path='../base/list.ts' />
-/// <reference path='../base/logging.ts' />
+/// <reference path='../../base/list.ts' />
+/// <reference path='../../base/logging.ts' />
 
 enum Type {
   NOOP,

@@ -39,45 +39,55 @@ task('default', function (params) {
   console.log('This is the default task.');
 });
 
+// Root folder for all build products
+var DIR_BUILD = 'build';
 
-var BUILD = 'build';
-var BUILD_SERVER = path.join(BUILD, 'server');
-var BUILD_WWW = path.join(BUILD, 'www');
-var BUILD_TEST = path.join(BUILD, 'test');
+// Root folder for collaborative text editor demo build products
+var DIR_BUILD_DEMO = path.join(DIR_BUILD, 'demos', 'collaborative-text-editor');
 
-directory(BUILD_SERVER);
-desc('This builds the server and puts it at \'' + BUILD_SERVER + '\'');
-task('server', [BUILD_SERVER], function () {
+// Root folder for test build products
+var DIR_BUILD_TEST = path.join(DIR_BUILD, 'test');
+
+directory(DIR_BUILD_DEMO);
+directory(DIR_BUILD_TEST);
+
+// Builds demo server, moves it to the build folder
+task('server', [DIR_BUILD_DEMO], function () {
   buildTypescriptFiles(
-    ['src/server/server.ts'],
-    path.join(BUILD_SERVER, 'server.js'), function () {
+    ['src/demos/collaborative-text-editor/server.ts'],
+    path.join(DIR_BUILD_DEMO, 'server.js'), function () {
       console.log('Server built!');
     });
 });
 
-directory(BUILD_WWW);
-desc('This copies all static files to the build directory');
-task('copy-static', [BUILD_WWW], function () {
-  jake.cpR('src/static', path.join(BUILD_WWW));
+// Moves static files to the right place for the demo
+task('copy-static', [DIR_BUILD_DEMO], function () {
+  jake.cpR('src/demos/collaborative-text-editor/static', DIR_BUILD_DEMO);
 });
 
-desc('Builds the demo')
+desc('Build collaborative text demo')
 task('demo', ['copy-static', 'server'], function () {
   buildTypescriptFiles(
-    ['src/ui/collaborative_text_controller.ts'],
-    path.join(BUILD_WWW, 'static/js/collaborative-text-controller.js'), function () {
+    ['src/demos/collaborative-text-editor/client.ts'],
+    path.join(DIR_BUILD_DEMO, 'static/js/client.js'), function () {
       console.log('Text demo built!');
     });
 });
 
-directory(BUILD_TEST);
-desc('This compiles and runs all tests');
-task('test', [BUILD_TEST], function () {
+desc('Watch and build the collaborative text demo')
+watchTask(['demo'], function () {
+  this.watchFiles.include([
+    './**/*.ts'
+  ]);
+});
+
+desc('Compile and run all tests');
+task('test', [DIR_BUILD_TEST], function () {
   var sources = [
     'test/ot/test_control.ts'
     , 'test/ot/test_text.ts'
   ];
-  var output = path.join(BUILD_TEST, 'test.js');
+  var output = path.join(DIR_BUILD_TEST, 'test.js');
   buildTypescriptFiles(sources, output, function () {
 
     jake.exec('$(npm bin)/mocha ' + output, {printStdout: true}, function () {
@@ -85,15 +95,4 @@ task('test', [BUILD_TEST], function () {
       complete();
     });
   });
-});
-
-desc('Build all')
-task('all', ['server', 'demo'], function () {
-});
-
-desc('Watch and build the server and teh demo')
-watchTask(['server', 'demo'], function () {
-  this.watchFiles.include([
-    './**/*.ts'
-  ]);
 });

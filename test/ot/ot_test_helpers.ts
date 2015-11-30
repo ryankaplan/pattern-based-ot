@@ -1,4 +1,4 @@
-/// <reference path='../../src/ot/text.ts' />
+/// <reference path='../../src/pbot/ot/text.ts' />
 
 /// <reference path='../test.ts' />
 

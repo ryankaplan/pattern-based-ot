@@ -1,7 +1,7 @@
 /// <reference path='messages.ts' />
 /// <reference path='operation.ts' />
-/// <reference path='../base/lang.ts' />
-/// <reference path='../base/list.ts' />
+/// <reference path='../../base/lang.ts' />
+/// <reference path='../../base/list.ts' />
 
 interface RawServerSocket {
   // joins a channel. can join one at a time.

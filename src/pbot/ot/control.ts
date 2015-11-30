@@ -1,8 +1,7 @@
 /// <reference path='operation.ts' />
-
-/// <reference path='../base/deque.ts' />
-/// <reference path='../base/list.ts' />
-/// <reference path='../base/logging.ts' />
+/// <reference path='../../base/deque.ts' />
+/// <reference path='../../base/list.ts' />
+/// <reference path='../../base/logging.ts' />
 
 function listTransform(op: Operation, list: Array<Operation>):any {
   var tOp = op;
