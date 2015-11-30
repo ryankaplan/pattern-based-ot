@@ -237,55 +237,37 @@ class OTClient {
     // op's total ordering.
     for (var siteId in this._transformationPathBySiteId) {
       if (siteId === op.timestamp().siteId()) {
-        // TODO(ryan): We don't need to build a deque here either.
-        //
-        // Ignore the transformation path for the client that generated the op.
-        // New transformation path for this site becomes L1 + L2.
-        let newPath = new Deque<Operation>();
-        for (var i = 0; i < l1OverOp.length; i++) {
-          newPath.pushBack(l1OverOp[i]);
-        }
-        for (var i = 0; i < l2OverOp.length; i++) {
-          newPath.pushBack(l2OverOp[i]);
-        }
-        this._transformationPathBySiteId[siteId] = newPath;
+        // TODO(ryan): We don't need to build a deque here. We should be transforming
+        // l1 and l2 in place (in their path).
+        this._transformationPathBySiteId[siteId] = new Deque<Operation>(l1OverOp.concat(l2OverOp));
         continue;
       }
 
       var path = this.pathForSiteId(siteId);
 
-      // TODO(ryan): We don't need to build a new deque here. Build a deque that
-      // lets you insert at a particular index.
-      var newPath = new Deque<Operation>();
-
-      // Suppose the list is as follows: [a, b, c, [d], e, f, g, h] where [d] is
-      // the operation that we break on. Then when we break, i is going to be 4.
-      // So we insert at index i.
+      // Purge all ops in the path with TO greater than op's TO. Then insert tOp.
+      // Then insert the rest of the ops from l2OverOp.
       //
-      // What about if it's the first element? [[a], b, c] -- i is 1 and we insert
-      // at 1.
-      //
-      // What about if it's the last element? [a, b, [c]] -- i is 3 and we insert at
-      // 3. Still good.
-      //
-      var i = 0;
-      for (; i < path.length; i++) {
-        if (path.get(i).timestamp().totalOrderingId() !== null &&
-            path.get(i).timestamp().totalOrderingId() < op.timestamp().totalOrderingId()) {
-          newPath.pushBack(path.get(i));
-        } else {
-          break;
+      // This is functionally the same as points 7 (1) and 7 (2) on page 11 of
+      // the paper in section 'Remote Processing'.
+      for (var i = 0; i < path.length - 1; i++) {
+        if (
+            path.get(i).timestamp().totalOrderingId() !== null &&
+            path.get(i).timestamp().totalOrderingId() > op.timestamp().totalOrderingId()
+        ) {
+          fail('How do we have an op with a greater TO than what we just received?');
         }
       }
 
-      newPath.pushBack(opOverL1);
-
-      // Now 'replace' the rest of the operations in the path with the operations in l2OverOp
-      for (var other of l2OverOp) {
-        newPath.pushBack(other);
+      while (path.length > 0 && path.peekBack().timestamp().totalOrderingId() == null) {
+        path.popBack();
       }
 
-      this._transformationPathBySiteId[siteId] = newPath;
+      path.pushBack(opOverL1);
+
+      for (var other of l2OverOp) {
+        path.pushBack(other);
+      }
     }
 
     if (!this._inInitialLoad) {
