@@ -21,7 +21,9 @@ That said, I plan to keep working on this so it'll get better over time. Maybe a
 some point it'll be useful to someone other than me.
 
 There's a demo illustrating how to use the library in
-`src/demos/collaborative-text-editor`. Here's a gif of it in action:
+`src/demos/collaborative-text-editor`.
+
+Here's a gif of the demo in action:
 
 
 ![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/demos/collaborative-text-editor/static/images/demo.gif?raw=true)
@@ -31,11 +33,11 @@ There's a demo illustrating how to use the library in
 To get started:
 
 - Install npm by downloading and installing node.js from here: https://nodejs.org/en/
-- Open the repo folder and run `npm install`
+- Clone the repo and navigate to it in a terminal. Run `npm install`
 - In one terminal window run `jake watch`
-- In another terminal window run `nodemon build/demos/collaborative-text-editor/server.js`
-- Visit `http://localhost:3000/` in a browser to open a document. This will generate a URL with a random key on the end.
-- Copy paste the URL from this tab into another tab, and type away!
+- In another terminal window run `$(npm bin)/nodemon build/demos/collaborative-text-editor/server.js`
+- Visit `http://localhost:3000/` in a browser. This will navigate to a URL with a random documentId.
+- Copy paste the URL from this tab into another tab and type away!
 
 To run tests, run `jake test` from the project root.
 
