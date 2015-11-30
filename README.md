@@ -1,4 +1,4 @@
-# PbOT (Pattern Based OT)
+# PBOT (Pattern Based OT)
 
 This project is a server and client for the Pattern-based Operational Transform
 algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
