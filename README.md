@@ -24,7 +24,7 @@ There's a demo illustrating how to use the library in
 `src/demos/collaborative-text-editor`. Here's a gif of it in action:
 
 
-![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/static/images/demo.gif?raw=true)
+![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/demos/collaborative-text-editor/static/images/demo.gif?raw=true)
 
 # Development Setup
 
