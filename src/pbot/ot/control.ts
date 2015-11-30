@@ -329,10 +329,4 @@ class OTClient {
     }
     return this._transformationPathBySiteId[siteId];
   }
-
-  private broadcast(op:Operation) {
-    // Make request. In callback:
-    let totalOrderingId:number = -1;
-    op.timestamp().setTotalOrderingId(totalOrderingId);
-  }
 }
