@@ -19,8 +19,8 @@ interface TestClient {
 
 function setupTest(initialDocumentContent: string, documentId: string, numClients: number) {
   let mockSocketServer = new MockSocketServer();
-  let mockServer = new OTServer(mockSocketServer);
-  mockSocketServer.on('connection', (socket_: RawServerSocket) => {
+  let mockServer = new OTServer();
+  mockSocketServer.on('connection', (socket_: IWebSocket) => {
     connectServerSocket(mockServer, socket_);
   });
 

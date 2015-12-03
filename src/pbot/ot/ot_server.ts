@@ -131,7 +131,8 @@ class OTServer {
     }
     socket.send(JSON.stringify(new OTMessage(MessageType.INITIAL_LOAD_END)));
 
-    let dcMessage = new DocumentConnectionsMessage(docState.connectedSiteIds());
+    let siteIds = docState.connectedSiteIds();
+    let dcMessage = new DocumentConnectionsMessage(siteIds);
     docState.appendMessage(dcMessage);
     this.broadcast(socket.documentId(), JSON.stringify(dcMessage));
   }

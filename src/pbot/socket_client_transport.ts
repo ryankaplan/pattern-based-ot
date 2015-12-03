@@ -47,7 +47,6 @@ class SocketClientTransport implements OTClientTransport {
           // Then it will tell us who else is connected on this document.
           // This will also be called every time someone new joins.
           let dcMessage = <DocumentConnectionsMessage>rawMsg;
-          if (dcMessage.connectedSites.indexOf(this._siteId) === -1) { fail('Server thinks we\'re not in this document'); }
           handleConnectedClients(dcMessage.connectedSites);
           break;
 
@@ -62,10 +61,16 @@ class SocketClientTransport implements OTClientTransport {
       }
     };
 
-    this._socket.onopen = () => {
-      console.log('Socket opened!');
+    let onopen = () => {
       this._socket.send(JSON.stringify(new OTMessage(MessageType.CLIENT_IS_READY)));
     };
+
+    // If readyState is OPEN, start sending. Otherwise wait.
+    if (this._socket.readyState === 1) {
+      onopen();
+    } else {
+      this._socket.onopen = onopen;
+    }
   }
 
   // Send an operation to all other sites

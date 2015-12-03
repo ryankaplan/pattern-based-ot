@@ -3,71 +3,53 @@
 /// <reference path='../../src/pbot/ot/ot_server.ts' />
 /// <reference path='../../src/pbot/ot/text_op.ts' />
 
-
 // TODO(ryan): MockSocketServer doesn't handle disconnects, but they're
 // an important case to test.
-class MockSocketServer implements OTSocketServer {
+class MockSocketServer {
   private _callbackByEvent: { [evt: string]: (socket: any) => void } = {};
-  private _connectedSockets: Array<MockRawServerSocket> = [];
-
   constructor() {}
-
-  on(evt: string, callback: (socket: any) => void) {
-    this._callbackByEvent[evt] = callback;
-  }
-
-  handleNewSocketConnection(serverSocket: MockRawServerSocket) {
-    this._connectedSockets.push(serverSocket);
-    this._callbackByEvent['connection'](serverSocket);
-  }
-
-  // Implement OTSocketServer
-  send(channel: string, type: string, msg: any) {
-    for (var socket of this._connectedSockets) {
-      if (socket.channel() === channel) {
-        socket.emit(type, msg);
-      }
-    }
-  }
+  on(evt: string, callback: (socket: any) => void) { this._callbackByEvent[evt] = callback; }
+  handleNewSocketConnection(serverSocket: MockRawServerSocket) { this._callbackByEvent['connection'](serverSocket); }
 }
 
-class MockRawServerSocket implements RawServerSocket {
+class MockRawServerSocket implements IWebSocket {
   private _callbackByEvt: { [evt: string]: (obj: any) => void } = {};
-  private _channel: string = null;
   private _clientSocket: MockRawClientSocket;
 
-  // Helpers
-  setClientSocket(clientSocket: MockRawClientSocket) { this._clientSocket = clientSocket; }
-  channel(): string { return this._channel; }
+  setClientSocket(clientSocket: MockRawClientSocket) {
+    this._clientSocket = clientSocket;
+  }
 
-  handleMessageFromClient(type: string, obj: any) {
+  handleMessageFromClient(data: string) {
+    let type = 'message';
     if (type in this._callbackByEvt) {
-      this._callbackByEvt[type](obj);
+      this._callbackByEvt[type](data);
     } else {
       infoLog('No callback found in MockRawServerSocket for type ' + type);
     }
   }
 
-  // Implement RawServerSocket
-  join(channel: string): void { this._channel = channel; }
-  emit(type: string, obj: any): void { this._clientSocket.handleMessageFromServer(type, obj); }
-  on(evt: string, func: (obj: any) => void): void { this._callbackByEvt[evt] = func; }
+  // Implement IWebSocket
+  onclose: (event: {wasClean: boolean; code: number; reason: string; target: IWebSocket}) => void = null;
+
+  send(data: any, cb?: (err: Error) => void): void {
+    this._clientSocket.handleMessageFromServer(data);
+  }
+
+  on(event: string, listener: (obj: any) => void): IWebSocket {
+    this._callbackByEvt[event] = listener;
+    return this;
+  }
 }
 
-interface Message {
-  type: string;
-  value: any;
-}
-
-class MockRawClientSocket implements RawClientSocket {
-  private _callbackByEvt: { [evt: string]: (obj: any) => void } = {};
+class MockRawClientSocket implements WebSocket {
   private _serverSocket: MockRawServerSocket;
 
   private _isQueueingSends: boolean = false;
-  private _queuedSends: Array<Message> = [];
+  private _queuedSends: Array<string> = [];
 
   private _isQueueingReceives: boolean = false;
-  private _queuedReceives: Array<Message> = [];
+  private _queuedReceives: Array<string> = [];
 
   // Just like with a WebSocket it connects to the server as soon as you create
   // the object. I personally dislike this pattern.
@@ -83,8 +65,8 @@ class MockRawClientSocket implements RawClientSocket {
 
     if (!isQueueing) {
       // flush sends
-      for (var msg of this._queuedSends) {
-        this._serverSocket.handleMessageFromClient(msg.type, msg.value);
+      for (var data of this._queuedSends) {
+        this._serverSocket.handleMessageFromClient(data);
       }
       this._queuedSends = [];
     }
@@ -100,47 +82,64 @@ class MockRawClientSocket implements RawClientSocket {
     } else {
       // flush receives
       debugLog("MockRawClientSocket", 'FLUSHING ' + this._queuedReceives + ' ops');
-      for (var msg of this._queuedReceives) {
-        if (msg.type in this._callbackByEvt) {
-          this._callbackByEvt[msg.type](msg.value);
+      for (var data of this._queuedReceives) {
+
+        if (this.onmessage !== null) {
+          this.onmessage(<MessageEvent>{
+            data: data
+          });
         } else {
-          fail('No callback found in MockRawClientSocket for type ' + msg.type);
+          fail('onmessage is null on WebSocket instance');
         }
       }
       this._queuedReceives = [];
     }
   }
 
-  handleMessageFromServer(type: string, obj: any) {
+  handleMessageFromServer(data: any) {
     if (this._isQueueingReceives) {
-      this._queuedReceives.push({
-        type: type,
-        value: obj
-      });
-      return;
-    }
-
-    if (type in this._callbackByEvt) {
-      this._callbackByEvt[type](obj);
+      this._queuedReceives.push(data);
     } else {
-      fail('No callback found in MockRawClientSocket for type ' + type);
+      if (this.onmessage !== null) {
+        this.onmessage(<MessageEvent>{
+          data: data
+        });
+      } else {
+        fail('onmessage is null on WebSocket instance');
+      }
     }
   }
 
-  // Used by client to send/receive from server
-  on(evt: string, func: (val: any) => void) {
-    this._callbackByEvt[evt] = func;
-  }
+  // Implement WebSocket
+  binaryType: string;
+  bufferedAmount: number;
+  extensions: string;
+  onclose: (ev: CloseEvent) => any;
+  onerror: (ev: Event) => any;
+  onmessage: (ev: MessageEvent) => any;
+  onopen: (ev: Event) => any;
+  protocol: string;
+  readyState: number = 1; // OPEN
+  url: string;
+  close(code?: number, reason?: string): void {}
+  send(data: any): void {
+    if (typeof data !== 'string') {
+      fail('Unexpected type passed to send!');
+    }
 
-  emit(type: string, obj: any) {
     if (this._isQueueingSends) {
-      this._queuedSends.push({
-        type: type,
-        value: obj
-      });
-      return;
+      this._queuedSends.push(data);
+    } else {
+      this._serverSocket.handleMessageFromClient(data);
     }
-
-    this._serverSocket.handleMessageFromClient(type, obj);
   }
+  CLOSED: number;
+  CLOSING: number;
+  CONNECTING: number;
+  OPEN: number;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void {}
+
+  // Implement EventTarget
+  dispatchEvent(evt: Event): boolean { return false; }
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void {}
 }
