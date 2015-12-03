@@ -25,7 +25,6 @@ There's a demo illustrating how to use the library in
 
 Here's a gif of the demo in action:
 
-
 ![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/demos/collaborative-text-editor/static/images/demo.gif?raw=true)
 
 # Development Setup
@@ -40,16 +39,6 @@ To get started:
 - Copy paste the URL from this tab into another tab and type away!
 
 To run tests, run `jake test` from the project root.
-
-# Things I plan to next...
-
-- Save document state on disk.
-- Implement the history buffer/selective replication optimizations from the paper.
-- Make socket.io less of a dependency because it doesn't guarantee strict message
-  ordering on all browsers (rather, it didn't used to and I haven't verified that it
-  does now).
-- Some basic form of undo/redo.
-- Implement a tree OT type.
 
 # Citations
 
