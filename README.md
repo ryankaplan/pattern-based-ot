@@ -1,13 +1,29 @@
 # PBOT (Pattern Based OT)
 
-This project is a server and client for the Pattern-based Operational Transform
-algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
-by Yi Xu and Chengzheng Sun [^1]. This is published with permission from Prof. Sun.
+This project is a server and client for the Pattern-based Operational
+Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
+This implementation is published with permission from one of the
+authors - Prof. Sun.
 
 I'm building this project for fun -- I want to better understand OT. And
 implementing an OT algorithm seemed like a good start. It's not a library
-intended for production use but I'm making it public anyway in case others
-find it interesting or the code useful.
+intended for production use. I'm making it public in case others find it
+interesting or the code useful.
+
+What's exciting about pattern-based OT? Here are two that I find particular
+cool:
+
+1. PBOT doesn't require any transformation of operations on the server. Most
+OT algorithms involve transformation work on the server which impacts
+scalability and which limits technology choices if you want to write your OT
+code only once.
+
+2. Sends local ops to the server immediately. This is in contrast, for example,
+to the Google Wave OT algorithm which waits for outbound ops to come back before
+sending more. This helps performance and avoids a complex client/network state
+machine.
+
+# This implementation
 
 There aren't any known bugs in the OT code but, again, this is *not* built
 to be a production-ready library. For example:
