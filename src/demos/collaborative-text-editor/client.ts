@@ -6,7 +6,6 @@
 /// <reference path='../../pbot/socket_client_transport.ts' />
 /// <reference path='typings/diff_match_patch/diff_match_patch.d.ts' />
 /// <reference path='typings/jquery/jquery.d.ts' />
-/// <reference path='../../pbot/typings/socket.io/client.d.ts' />
 
 // Messages that are send through our sockets:
 //
