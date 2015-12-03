@@ -1,15 +1,18 @@
 /// <reference path='../../pbot/ot/messages.ts' />
 /// <reference path='../../pbot/ot/ot_server.ts' />
-/// <reference path='../../pbot/transport/socket_server.ts' />
 /// <reference path='../../pbot/typings/node/node.d.ts' />
-/// <reference path='../../pbot/typings/socket.io/socket.io.d.ts' />
+/// <reference path='../../pbot/typings/ws/ws.d.ts' />
+
+let ws = require('ws');
+let WebSocketServer = ws.Server;
 
 var express = require('express');
+let url = require('url');
 var app = express();
 var httpServer = require('http').Server(app);
+let port = 3000;
 
 // Serve data out of /static.
-console.log(__dirname + '/static');
 app.use(express.static(__dirname + '/static'));
 
 // When a user visits the server at /, direct them to a new collaborative document
@@ -21,22 +24,19 @@ app.get('/', function (req: any, res: any) {
   res.end();
 });
 
-// Serve locally on :3000
-httpServer.listen(3000, function () {
-  console.log('listening on *:3000');
-});
 
-var socketIOServer: SocketIO.Server = require('socket.io')(httpServer);
+httpServer.listen(port, function () { console.log('listening on *:' + port); });
+
+let wss = new WebSocketServer({ server: httpServer });
 
 // SocketServer is a wrapper around SocketIO.Server that OTServer knows how to use.
 // The hope is that later I'll be able to swap out socket.io for any other library
 // that does the same thing and not have to change the logic in OTServer.
-let socketServer: SocketServer = new SocketServer(socketIOServer);
-let otServer: OTServer = new OTServer(socketServer);
+let otServer: OTServer = new OTServer();
 
 // Add a handler on the socket.io server so that each new connection is funneled
 // to the OT server.
-socketIOServer.on('connection', (socket_: SocketIO.Socket) => {
-  connectServerSocket(otServer, socket_);
+wss.on('connection', (ws: any) => {
+  connectServerSocket(otServer, <IWebSocket>ws);
 });
 

@@ -1,19 +1,13 @@
-/// <reference path='../../base/logging.ts' />
-/// <reference path='../ot/control.ts' />
-/// <reference path='../ot/messages.ts' />
-/// <reference path='../ot/text.ts' />
-
-interface RawClientSocket {
-  on(evt: string, func: (val: any) => void): void;
-  emit(evt: string, obj: any): void;
-}
+/// <reference path='../base/logging.ts' />
+/// <reference path='ot/control.ts' />
+/// <reference path='ot/messages.ts' />
+/// <reference path='ot/text.ts' />
 
 // Used by the client
 class SocketClientTransport implements OTClientTransport {
   private _siteId: string = null;
 
-  // TODO(ryan): type this better
-  constructor(private _socket: RawClientSocket) {}
+  constructor(private _socket: WebSocket) {}
 
   connect(
     documentId: string,
@@ -27,14 +21,16 @@ class SocketClientTransport implements OTClientTransport {
     handleInitialLoadEnd: () => void
   ): void {
 
-    this._socket.on('message', (rawMsg: OTMessage) => {
+    this._socket.onmessage = (evt: any) => {
+      var obj = JSON.parse(evt.data);
+      let rawMsg: OTMessage = <OTMessage>obj;
       switch (rawMsg.type.value) {
         case MessageType.SITE_ID.value:
           // First the server will send us our site id
           let siteIdMessage = <SiteIdMessage>rawMsg;
           this._siteId = siteIdMessage.siteId;
           handleSiteId(siteIdMessage.siteId);
-          this._socket.emit('message', new DocumentConnectMessage(documentId));
+          this._socket.send(JSON.stringify(new DocumentConnectMessage(documentId)));
           break;
 
         case MessageType.CLIENT_IS_READY.value:
@@ -64,16 +60,18 @@ class SocketClientTransport implements OTClientTransport {
           handleRemoteOp(textOp);
           break;
       }
-    });
+    };
 
-    // Tell the server to give us our siteId
-    this._socket.emit('message', new OTMessage(MessageType.CLIENT_IS_READY));
+    this._socket.onopen = () => {
+      console.log('Socket opened!');
+      this._socket.send(JSON.stringify(new OTMessage(MessageType.CLIENT_IS_READY)));
+    };
   }
 
   // Send an operation to all other sites
   public broadcastOperation(operation: Operation):void {
     let jsonOp = {};
     operation.fillJson(jsonOp);
-    this._socket.emit('message', new OperationMessage(jsonOp));
+    this._socket.send(JSON.stringify(new OperationMessage(jsonOp)));
   }
 }

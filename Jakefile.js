@@ -31,6 +31,7 @@ function buildTypescriptFiles(files, outFile, completion) {
     cmd += '-' + key + ' ' + tscKwOpts[key] + ' ';
   }
 
+  console.log('Running command', cmd);
   jake.exec(cmd, {printStdout: true}, completion);
 }
 

@@ -69,7 +69,7 @@ class MockRawClientSocket implements RawClientSocket {
   private _isQueueingReceives: boolean = false;
   private _queuedReceives: Array<Message> = [];
 
-  // Just like with socketio, it connects to the server as soon as you create
+  // Just like with a WebSocket it connects to the server as soon as you create
   // the object. I personally dislike this pattern.
   constructor(private _server: MockSocketServer) {
     this._serverSocket = new MockRawServerSocket();

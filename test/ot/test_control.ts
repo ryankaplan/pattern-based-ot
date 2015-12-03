@@ -5,7 +5,7 @@
 /// <reference path='../../src/pbot/ot/text.ts' />
 /// <reference path='../../src/pbot/ot/ot_server.ts' />
 /// <reference path='../../src/pbot/ot/messages.ts' />
-/// <reference path='../../src/pbot/transport/socket_client_transport.ts' />
+/// <reference path='../../src/pbot/socket_client_transport.ts' />
 
 /// <reference path='mock_server.ts' />
 /// <reference path='../test.ts' />

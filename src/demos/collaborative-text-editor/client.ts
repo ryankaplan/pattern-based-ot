@@ -3,7 +3,7 @@
 /// <reference path='../../pbot/ot/control.ts' />
 /// <reference path='../../pbot/ot/operation.ts' />
 /// <reference path='../../pbot/ot/text.ts' />
-/// <reference path='../../pbot/transport/socket_client_transport.ts' />
+/// <reference path='../../pbot/socket_client_transport.ts' />
 /// <reference path='typings/diff_match_patch/diff_match_patch.d.ts' />
 /// <reference path='typings/jquery/jquery.d.ts' />
 /// <reference path='../../pbot/typings/socket.io/client.d.ts' />
@@ -23,7 +23,7 @@
  * var controller = new Controller("#collab-doc");
  */
 class CollaborativeTextController implements OTClientListener {
-  private _socket = new SocketClientTransport(io());
+  private _socket = new SocketClientTransport(new WebSocket('ws://localhost:3000/', ['pbotProtocol']));
   private _client:OTClient = null;
   private _model: TextOperationModel = null;
 
