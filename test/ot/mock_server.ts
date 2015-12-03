@@ -1,7 +1,7 @@
 /// <reference path='../../src/base/lang.ts' />
 /// <reference path='../../src/pbot/ot/operation.ts' />
 /// <reference path='../../src/pbot/ot/ot_server.ts' />
-/// <reference path='../../src/pbot/ot/text.ts' />
+/// <reference path='../../src/pbot/ot/text_op.ts' />
 
 
 // TODO(ryan): MockSocketServer doesn't handle disconnects, but they're
