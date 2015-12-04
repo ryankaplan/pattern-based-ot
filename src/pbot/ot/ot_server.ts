@@ -68,7 +68,7 @@ function connectServerSocket(otServer: OTServer, rawSocket: IWebSocket) {
 
 class OpenDocumentState {
   private _docId: string;
-  private _toGen = new IDGenerator();
+  private _toGen = new Base.IDGenerator();
   private _connectedSites: Array<OTSocketWrapper> = [];
   private _messageHistory: Array<OTMessage> = [];
 
@@ -92,7 +92,7 @@ class OpenDocumentState {
 }
 
 class OTServer {
-  private _siteIdGen = new IDGenerator();
+  private _siteIdGen = new Base.IDGenerator();
   private _docStateById: { [docId: string]: OpenDocumentState } = {};
 
   private docStateForId(documentId: string): OpenDocumentState {

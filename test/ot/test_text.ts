@@ -49,11 +49,11 @@ describe('Text operations', () => {
     // Test transforming ops against each other
     site1 = {
       id: 1,
-      idGen: new IDGenerator()
+      idGen: new Base.IDGenerator()
     };
     site2 = {
       id: 2,
-      idGen: new IDGenerator()
+      idGen: new Base.IDGenerator()
     };
   });
 

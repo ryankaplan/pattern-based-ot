@@ -16,7 +16,7 @@ class SocketClientTransport implements OTClientTransport {
     // which will always be called before the first call to handleRemoteOp
     handleSiteId: (siteId: string) => void,
     handleConnectedClients:(connectedClients: Array<string>) => void,
-    handleRemoteOp: (op: Operation) => void,
+    handleRemoteOp: (op: OperationBase.Operation) => void,
     handleInitialLoadBegin: () => void,
     handleInitialLoadEnd: () => void
   ): void {
@@ -74,7 +74,7 @@ class SocketClientTransport implements OTClientTransport {
   }
 
   // Send an operation to all other sites
-  public broadcastOperation(operation: Operation):void {
+  public broadcastOperation(operation: OperationBase.Operation):void {
     let jsonOp = {};
     operation.fillJson(jsonOp);
     this._socket.send(JSON.stringify(new OperationMessage(jsonOp)));

@@ -8,7 +8,7 @@ enum Type {
   DELETE
 }
 
-class TextOp extends Operation {
+class TextOp extends OperationBase.Operation {
   constructor(private _type:Type,
               private _char:string, // null for DELETE
               private _location:number) {
@@ -90,7 +90,7 @@ class TextOp extends Operation {
   // and applying a and then tB to a document has the same result
   // as a applying b and then tA.
 
-  transform(other_:Operation): TextOp {
+  transform(other_: OperationBase.Operation): TextOp {
     let other = <TextOp>other_;
     let copy = new TextOp(null, null, null);
     copy.copy(this);
@@ -111,19 +111,19 @@ class TextOp extends Operation {
       return copy;
     }
 
-    let locationRelation = compare(this.location(), other.location());
+    let locationRelation = Base.compare(this.location(), other.location());
 
     if (this.isInsert() && other.isInsert()) {
-      if (locationRelation == ComparisonResult.GREATER_THAN) {
+      if (locationRelation === Base.ComparisonResult.GREATER_THAN) {
         copy._location += 1;
-      } else if (locationRelation == ComparisonResult.EQUAL && this._char > other._char) {
+      } else if (locationRelation === Base.ComparisonResult.EQUAL && this._char > other._char) {
         copy._location += 1;
       }
     }
 
     else if (this.isDelete() && other.isInsert()) {
       // Insert operations are applied before delete operations when there's a location tie
-      if (locationRelation == ComparisonResult.GREATER_THAN || locationRelation == ComparisonResult.EQUAL) {
+      if (locationRelation === Base.ComparisonResult.GREATER_THAN || locationRelation === Base.ComparisonResult.EQUAL) {
         copy._location += 1;
       }
     }
@@ -131,15 +131,15 @@ class TextOp extends Operation {
     else if (this.isInsert() && other.isDelete()) {
 
       // Insert operations are applied before delete operations when there's a location tie
-      if (locationRelation == ComparisonResult.GREATER_THAN) {
+      if (locationRelation === Base.ComparisonResult.GREATER_THAN) {
         copy._location -= 1;
       }
     }
 
     else if (this.isDelete() && other.isDelete) {
-      if (locationRelation == ComparisonResult.LESS_THAN) {
+      if (locationRelation === Base.ComparisonResult.LESS_THAN) {
         // Do nothing
-      } else if (locationRelation == ComparisonResult.GREATER_THAN) {
+      } else if (locationRelation === Base.ComparisonResult.GREATER_THAN) {
         copy._location -= 1;
       } else {
         copy._type = Type.NOOP;
@@ -159,8 +159,8 @@ class TextOp extends Operation {
   }
 }
 
-class TextOperationModel implements OperationModel {
-  private _chars:Array<string>;
+class TextOperationModel implements OperationBase.Model {
+  private _chars: Array<string>;
 
   constructor(text:string) {
     this._chars = text.split('');
@@ -170,7 +170,7 @@ class TextOperationModel implements OperationModel {
     return this._chars.join('');
   }
 
-  public execute(op_:Operation):void {
+  public execute(op_: OperationBase.Operation):void {
     let op = <TextOp>op_;
 
     if (op.isNoop()) {

@@ -19,7 +19,7 @@ app.use(express.static(__dirname + '/static'));
 // with a random documentId
 app.get('/', function (req: any, res: any) {
   res.writeHead(302, {
-    'Location': '/html/index.html?documentId=' + randomString(6, ALPHA_NUMERIC)
+    'Location': '/html/index.html?documentId=' + Base.randomString(6, Base.ALPHA_NUMERIC)
   });
   res.end();
 });
