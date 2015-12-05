@@ -13,11 +13,11 @@ describe('Grove Address', () => {
       let addr2 = new Grove.Address(null, null);
       addr2.initWithJson(addrJson);
 
-      assertEqual(addr.name, addr2.name, 'Names should be equal');
-      assertEqual(addr.path.length, addr2.path.length, 'Path lengths should be equal');
+      assertEqual(addr.id(), addr2.id(), 'Names should be equal');
+      assertEqual(addr.path().length, addr2.path().length, 'Path lengths should be equal');
 
-      for (var i = 0; i < addr.path.length; i++) {
-        if (addr.path[i] !== addr2.path[i]) {
+      for (var i = 0; i < addr.path().length; i++) {
+        if (addr.path()[i] !== addr2.path()[i]) {
           fail('items at index ' + i + ' in path are not equal ' + JSON.stringify(addr) + ' ' + JSON.stringify(addr2));
         }
       }

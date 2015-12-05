@@ -19,7 +19,7 @@ module Grove {
       // props for INSERT and DELETE
       private _address: Address, // N in the paper
       private _index: number, // n in the paper
-      private _name: string, // M in the paper
+      private _targetId: string, // M in the paper
 
       // props for INSERT
       private _nodeType: NodeType, // T in the paper
@@ -35,12 +35,12 @@ module Grove {
       return new GroveOp(GroveOpType.NOOP, null, null, null, null, null, null);
     }
 
-    static Insert(address: Address, index: number, name: string, type: NodeType) {
-      return new GroveOp(GroveOpType.INSERT, address, index, name, type, null, null);
+    static Insert(address: Address, index: number, targetId: string, type: NodeType) {
+      return new GroveOp(GroveOpType.INSERT, address, index, targetId, type, null, null);
     }
 
-    static Delete(address: Address, index: number, name: string) {
-      return new GroveOp(GroveOpType.DELETE, address, index, name, null, null, null);
+    static Delete(address: Address, index: number, targetId: string) {
+      return new GroveOp(GroveOpType.DELETE, address, index, targetId, null, null, null);
     }
 
     static Update(address: Address, key: string, f: TextOp) {
@@ -54,7 +54,7 @@ module Grove {
       this._address = new Address(null, null);
       this._address.initWithJson(parsed['address']);
       this._index = parsed['index'];
-      this._name = parsed['name'];
+      this._targetId = parsed['targetId'];
 
       // props for INSERT
       this._nodeType = parsed['nodeType'];
@@ -75,7 +75,7 @@ module Grove {
       json['address'] = {};
       this._address.fillJson(json['address']);
       json['index'] = this._index;
-      json['name'] = this._name;
+      json['targetId'] = this._targetId;
 
       // props for INSERT
       json['nodeType'] = this._nodeType;
@@ -95,7 +95,7 @@ module Grove {
       this._address = new Address(null, null);
       this._address.copy(other._address);
       this._index = other._index;
-      this._name = other._name;
+      this._targetId = other._targetId;
 
       // props for INSERT
       this._nodeType = other._nodeType;
@@ -119,10 +119,12 @@ module Grove {
       }
     }
 
+    setAddress(address: Address) { this._address = address; }
+
     type(): GroveOpType { return this._type; }
     address(): Address { return this._address; }
     index(): number { return this._index; }
-    name(): string { return this._name; }
+    targetId(): string { return this._targetId; }
     nodeType(): NodeType { return this._nodeType; }
     key(): string { return this._key; }
     textOp(): TextOp { return this._textOp; }
@@ -216,8 +218,24 @@ module Grove {
       // TODO(ryan)
     }
 
-    transformUpdateInsert(copy: Operation, other: Operation) {
+    transformUpdateInsert(a: Operation, b: Operation) {
       // TODO(ryan)
+      /*
+      let cmp = compare(a.address(), b.address());
+
+      if (a.address().id() === b.targetId()) {
+        let newId = b.address().id();
+        let newPath = b.address().path() + [b.index()] + a.address().path();
+
+        a.setAddress(new Address(newId, newPath));
+      }
+
+      else if (cmp.type == ComparisonResultType.PREFIX && b.index() <= a.address().path()[cmp.value]) {
+
+      }
+
+      return new Operation.Update(a.address(), a.key(), a.textOp());
+      */
     }
 
     transformUpdateDelete(copy: Operation, other: Operation) {

@@ -12,6 +12,7 @@ module Grove {
   /////////////////////////////////////////////////////////////////////////////////////////
 
   export enum NodeType {
+    GROUP,
     TEXT
   }
 
@@ -73,11 +74,11 @@ module Grove {
     }
 
     private nodeAtAddress(address: Address): Node {
-      if (!(address.name in this._roots)) {
-        fail('Missing node with name ' + address.name + ' in roots ' + JSON.stringify(this._roots));
+      if (!(address.id() in this._roots)) {
+        fail('Missing node with name ' + address.id() + ' in roots ' + JSON.stringify(this._roots));
       }
-      var node = this._roots[address.name];
-      for (var index of address.path) {
+      var node = this._roots[address.id()];
+      for (var index of address.path()) {
         if (node.children().length <= index) {
           fail('Index in path is not valid!');
         }
@@ -100,10 +101,10 @@ module Grove {
 
       if (op.isInsert()) {
         var node: Node = null;
-        if (op.name() in this._roots) {
-          node = this._roots[op.name()];
+        if (op.targetId() in this._roots) {
+          node = this._roots[op.targetId()];
           // remove from roots since we'll be appending this node to some other subtree
-          this._roots[op.name()] = null;
+          this._roots[op.targetId()] = null;
           // TODO(ryan): set node.name to null?
         } else {
           node = new Node(null);
@@ -113,11 +114,11 @@ module Grove {
 
       else if (op.isDelete()) {
         let removed = nodeAtAddr.removeChildAtIndex(op.index());
-        removed.setName(op.name());
-        if (op.name() in this._roots) {
+        removed.setName(op.targetId());
+        if (op.targetId() in this._roots) {
           fail("This shouldnt' happen!");
         }
-        this._roots[op.name()] = removed;
+        this._roots[op.targetId()] = removed;
       }
 
       else if (op.isUpdate()) {

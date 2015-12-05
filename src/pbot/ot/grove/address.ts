@@ -1,24 +1,30 @@
 module Grove {
   export class Address {
     constructor(
-      public name: string,
-      public path: Array<number>
+      private _id: string,
+      private _path: Array<number>
     ) {}
 
     initWithJson(parsed: any): void {
-      this.name = parsed['name'];
-      this.path = parsed['path'].slice(0);
+      this._id = parsed['id'];
+      this._path = parsed['path'].slice(0);
     }
 
     fillJson(json: any): void {
-      json['name'] = this.name;
-      json['path'] = this.path.slice(0);
+      json['id'] = this._id;
+      json['path'] = this._path.slice(0);
     }
 
     copy(other: Address):void {
-      this.name = other.name;
-      this.path = other.path.slice(0);
+      this._id = other._id;
+      this._path = other._path.slice(0);
     }
+
+    setId(id: string) { this._id = name; }
+    setPath(path: Array<number>) { this._path = path; }
+
+    id(): string { return this._id; }
+    path(): Array<number> { return this._path; }
   }
 
   export enum ComparisonResultType {
@@ -34,23 +40,23 @@ module Grove {
   }
 
   export function compare(a: Address, b: Address): ComparisonResult {
-    if (a.name !== b.name) {
+    if (a.id() !== b.id()) {
       return { type: ComparisonResultType.DIFFERENT,  value: null };
     }
 
-    for (var i = 0; i < a.path.length; i++) {
-      if (i === b.path.length) {
+    for (var i = 0; i < a.path().length; i++) {
+      if (i === b.path().length) {
         return {
           type: ComparisonResultType.PREFIX,
           value: i
         };
 
-      } else if (a.path[i] !== b.path[i]) {
+      } else if (a.path()[i] !== b.path()[i]) {
         return { type: ComparisonResultType.DIFFERENT,  value: null };
       }
     }
 
-    if (a.path.length == b.path.length) {
+    if (a.path().length == b.path().length) {
       return { type: ComparisonResultType.SAME,  value: null };
     }
 
