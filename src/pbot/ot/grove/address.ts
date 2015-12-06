@@ -15,9 +15,8 @@ module Grove {
       json['path'] = this._path.slice(0);
     }
 
-    copy(other: Address):void {
-      this._id = other._id;
-      this._path = other._path.slice(0);
+    copy(): Address {
+      return new Address(this._id, this._path.slice(0));
     }
 
     setId(id: string) { this._id = name; }

@@ -74,7 +74,7 @@ module OperationBase {
 
   // Operation base class
   export abstract class Operation {
-    protected _timestamp:Timestamp;
+    protected _timestamp: Timestamp;
 
     initWithJson(parsed: any) {
       if (parsed['timestamp'] !== null) {

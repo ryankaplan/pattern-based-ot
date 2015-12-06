@@ -89,11 +89,10 @@ module Grove {
       super.fillJson(json);
     }
 
-    copy(other: Operation):void {
+    copy(other: Operation): void {
       // props for INSERT and DELETE
       this._type = other._type;
-      this._address = new Address(null, null);
-      this._address.copy(other._address);
+      this._address = other.address().copy();
       this._index = other._index;
       this._targetId = other._targetId;
 
@@ -119,6 +118,9 @@ module Grove {
       }
     }
 
+    setType(type: GroveOpType) { this._type = type; }
+    setIndex(index: number) { this._index = index; }
+    setTextOp(textOp: TextOp) { this._textOp = textOp; }
     setAddress(address: Address) { this._address = address; }
 
     type(): GroveOpType { return this._type; }
@@ -152,99 +154,313 @@ module Grove {
       }
 
       if (this.isInsert() && other.isInsert()) {
-        this.transformInsertInsert(copy, other);
+        return this.transformInsertInsert(other);
       }
 
       else if (this.isInsert() && other.isDelete()) {
-        this.transformInsertDelete(copy, other);
+        return this.transformInsertDelete(other);
       }
 
       else if (this.isInsert() && other.isUpdate()) {
-        this.transformInsertUpdate(copy, other);
+        return this.transformInsertUpdate(other);
       }
 
       else if (this.isDelete() && other.isInsert()) {
-        this.transformDeleteInsert(copy, other);
+        return this.transformDeleteInsert(other);
       }
 
       else if (this.isDelete() && other.isDelete()) {
-        this.transformDeleteDelete(copy, other);
+        return this.transformDeleteDelete(other);
       }
 
       else if (this.isDelete() && other.isUpdate()) {
-        this.transformDeleteUpdate(copy, other);
+        return this.transformDeleteUpdate(other);
       }
 
       else if (this.isUpdate() && other.isInsert()) {
-        this.transformUpdateInsert(copy, other);
+        return this.transformUpdateInsert(other);
       }
 
       else if (this.isUpdate() && other.isDelete()) {
-        this.transformUpdateDelete(copy, other);
+        return this.transformUpdateDelete(other);
       }
 
       else if (this.isUpdate() && other.isUpdate()) {
-        this.transformUpdateUpdate(copy, other);
+        return this.transformUpdateUpdate(other);
       }
 
-      else {
-        fail('Unrecognized node types ' + this.readableType() + ' and ' + other.readableType());
+      fail('Unrecognized node types ' + this.readableType() + ' and ' + other.readableType());
+      return null;
+    }
+
+    // The logic of these functions is from page 65 of the paper
+    // 'Generalizing Operational Transformation to the Standard
+    // General Markup Language' by Davis, Sun, Lu.
+    //
+    // I've changed the variable names to make more sense in
+    // context.
+    //
+    // TODO(ryan): Need to copy nodes in the functions below or their
+    // timestamps don't get copied.
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    // INSERT TRANSFORMS
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    transformInsertInsert(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
+
+      let addr = this.address().copy();
+      let index = this.index();
+
+      if (this.address().id() === other.targetId()) {
+        addr = new Address(
+          other.address().id(),
+          other.address().path().concat([other.index()]).concat(this.address().path())
+        );
       }
 
+      else if (cmp.type === ComparisonResultType.PREFIX) {
+        // inserting a sibling before addr[cmp.value]. Use siteId
+        // to break ties.
+        if (
+          other.index() < addr.path()[cmp.value] ||
+          (other.index() === addr.path()[cmp.value] && this.timestamp().siteId() < other.timestamp().siteId())
+        ) {
+          addr[cmp.value] = addr[cmp.value] + 1;
+        }
+      }
+
+      else if (cmp.type === ComparisonResultType.SAME) {
+        // inserting a sibling at addr[cmp.value]. Use siteId
+        // to break ties.
+        if (
+          other.index() < this.index() ||
+          (other.index() === this.index() && this.timestamp().siteId() < other.timestamp().siteId())
+        ) {
+          index += 1;
+        }
+      }
+
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setAddress(addr);
+      copy.setIndex(index);
       return copy;
     }
 
-    transformInsertInsert(copy: Operation, other: Operation) {
-      // TODO(ryan)
-    }
+    transformInsertDelete(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
 
-    transformInsertDelete(copy: Operation, other: Operation) {
-      // TODO(ryan)
-    }
+      let addr = this.address().copy();
+      let index = this.index();
 
-    transformInsertUpdate(copy: Operation, other: Operation) {
-      // TODO(ryan)
-    }
-
-    transformDeleteInsert(copy: Operation, other: Operation) {
-      // TODO(ryan)
-    }
-
-    transformDeleteDelete(copy: Operation, other: Operation) {
-      // TODO(ryan)
-    }
-
-    transformDeleteUpdate(copy: Operation, other: Operation) {
-      // TODO(ryan)
-    }
-
-    transformUpdateInsert(a: Operation, b: Operation) {
-      // TODO(ryan)
-      /*
-      let cmp = compare(a.address(), b.address());
-
-      if (a.address().id() === b.targetId()) {
-        let newId = b.address().id();
-        let newPath = b.address().path() + [b.index()] + a.address().path();
-
-        a.setAddress(new Address(newId, newPath));
+      if (cmp.type === ComparisonResultType.SAME) {
+        if (other.index() < this.index()) {
+          // other removes a sibling before the place where this
+          // would insert
+          index -= 1;
+        }
       }
 
-      else if (cmp.type == ComparisonResultType.PREFIX && b.index() <= a.address().path()[cmp.value]) {
+      else if (cmp.type === ComparisonResultType.PREFIX) {
+        if (other.index() < addr.path()[cmp.value]) {
+          // other removes a sibling of addr[cmp.value]
+          addr[cmp.value] = addr[cmp.value] - 1;
+        }
 
+        else if (other.index() === addr.path()[cmp.value]) {
+          // other deletes an ancestor of the place where this
+          // op applies. So this op now applies to the truncated
+          // subtree that comes from applying other.
+          addr = new Address(
+            other.targetId(),
+            addr.path().slice(cmp.value + 1)
+          );
+        }
       }
 
-      return new Operation.Update(a.address(), a.key(), a.textOp());
-      */
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setAddress(addr);
+      copy.setIndex(index);
+      return copy;
     }
 
-    transformUpdateDelete(copy: Operation, other: Operation) {
-      // TODO(ryan)
+    transformInsertUpdate(other: Operation): Operation {
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      return copy;
     }
 
-    transformUpdateUpdate(copy: Operation, other: Operation) {
-      // TODO(ryan)
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    // DELETE TRANSFORMS
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+
+    transformDeleteInsert(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
+
+      var addr = this.address().copy();
+      let index = this.index();
+
+      if (cmp.type === ComparisonResultType.PREFIX) {
+        if (
+          other.index() < addr.path()[cmp.value] ||
+          (other.index() === addr.path()[cmp.value] && this.timestamp().siteId() < other.timestamp().siteId())
+        ) {
+          // insert is putting a new sibling before addr[cmp.value]
+          addr[cmp.value] = addr[cmp.value] + 1;
+        }
+      }
+
+      else if (cmp.type === ComparisonResultType.SAME) {
+        // insert puts a new sibling before the node this
+        // acts on
+        if (other.index() < this.index()) {
+          index += 1;
+        }
+      }
+
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setAddress(addr);
+      copy.setIndex(index);
+      return copy;
     }
 
+    transformDeleteDelete(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
+
+      var addr = this.address().copy();
+      let index = this.index();
+      let type = this.type();
+
+      if (cmp.type === ComparisonResultType.SAME) {
+        if (other.index() < this.index()) {
+          // other deletes a sibling before the node that
+          // this acts on
+          index -= 1;
+        }
+
+        else if (other.index() === this.index() && this.timestamp().siteId() === other.timestamp().siteId()) {
+          // Both ops delete the same node
+          // TODO(ryan): the siteId check in this conditional doesn't make sense to
+          // me, but it's in the paper. This might fail the CP2 validation. I'll
+          // find out when I write tests.
+          type = GroveOpType.NOOP;
+        }
+      }
+
+      else if (cmp.type === ComparisonResultType.PREFIX) {
+        if (other.index() < addr.path()[cmp.value]) {
+          // other deletes a sibling before addr.path()[cmp.value]
+          addr.path()[cmp.value] = addr.path()[cmp.value] - 1;
+        }
+
+        else if (other.index() === addr.path()[cmp.value]) {
+          // other deletes the node at addr.path()[cmp.value]
+          addr = new Address(other.targetId(), addr.path().slice(cmp.value + 1));
+        }
+      }
+
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setAddress(addr);
+      copy.setIndex(index);
+      copy.setType(type);
+      return copy;
+    }
+
+    transformDeleteUpdate(other: Operation): Operation {
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      return copy;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    // UPDATE TRANSFORMS
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    transformUpdateInsert(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
+
+      var addr = this.address().copy();
+
+      if (addr.id() === other.targetId()) {
+        // other takes node with id other.targetId() and moves
+        // it into the main tree. We need to update the address
+        // of this to point to the main tree.
+        addr = new Address(
+          other.address().id(),
+          other.address().path().concat([other.index()]).concat(this.address().path())
+        );
+      }
+
+      else if (
+        cmp.type === ComparisonResultType.PREFIX &&
+        other.index() <= this.address().path()[cmp.value]
+      ) {
+        // other inserts a sibling before this.address().path()[cmp.value]
+        // to its index in its parent's children list must be incremented
+        addr.path()[cmp.value] = addr.path()[cmp.value] + 1;
+      }
+
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setAddress(addr);
+      return copy;
+    }
+
+    transformUpdateDelete(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
+
+      var addr = this.address().copy();
+
+      if (cmp.type === ComparisonResultType.PREFIX) {
+        // other deletes a sibling after this.address([cmp.value])
+
+        if (other.index() < this.address().path()[cmp.value]) {
+          // a sibling before addr.path()[cmp.value] was removed
+          addr.path()[cmp.value] = addr.path()[cmp.value] - 1
+        }
+
+        else if (other.index() === this.address().path()[cmp.value]) {
+          // other removes the subtree that this op applies to. So
+          // our address now points to the removed ops new id and
+          // the path is shortened to the remaining part of it.
+          addr = new Address(
+            other.targetId(),
+            this.address().path().slice(cmp.value + 1)
+          );
+        }
+      }
+
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setAddress(addr);
+      return copy;
+    }
+
+    transformUpdateUpdate(other: Operation): Operation {
+      let cmp = compare(this.address(), other.address());
+
+      let textOp = this.textOp();
+      if (cmp.type === ComparisonResultType.SAME && this.key() === other.key()) {
+        textOp = this.textOp().transform(other.textOp());
+      }
+
+      let copy = new Operation(null, null, null, null, null, null, null);
+      copy.copy(this);
+      copy.setTextOp(textOp);
+      return copy;
+    }
   }
 }
