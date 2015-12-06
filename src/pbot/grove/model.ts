@@ -2,10 +2,17 @@
 /// <reference path='../char/model.ts' />
 
 module Grove {
-  function preOrderTraversal(node: Node, func: (node: Node) => void): void {
-    func(node);
+  function traverse(node: Node, pre: (node: Node) => void, post: (node: Node) => void): void {
+    if (pre) {
+      pre(node);
+    }
+
     for (var child of node.children()) {
-      preOrderTraversal(child, func);
+      traverse(child, pre, post);
+    }
+
+    if (post) {
+      post(node);
     }
   }
 
@@ -61,16 +68,35 @@ module Grove {
     }
 
     public render(): string {
-      var result = '';
+      var result: Array<string> = [];
       for (var name in this._roots) {
-        preOrderTraversal(this._roots[name], (node: Node) => {
-          if (node.children().length !== 0) {
-            return;
+
+        traverse(
+          this._roots[name],
+
+          // pre
+          (node: Node) => {
+            let tag = node.modelForKey('tag').render();
+            if (tag.length !== 0) {
+              result.push('<' + tag + '>');
+            }
+
+            let content = node.modelForKey('content').render();
+            if (content.length !== 0) {
+              result.push(content);
+            }
+          },
+
+          // post
+          (node: Node) => {
+            let tag = node.modelForKey('tag').render();
+            if (tag.length !== 0) {
+              result.push('</' + tag + '>');
+            }
           }
-          result += node.modelForKey('content').render();
-        });
+        );
       }
-      return result;
+      return result.join('');
     }
 
     private nodeAtAddress(address: Address): Node {

@@ -17,20 +17,36 @@ describe('Grove Model', () => {
     });
   });
 
-  describe('Compare', () => {
-    it('Should return the same results as the paper', () => {
+  function addChild(model: Grove.Model, parentPath: Array<number>, index: number, tag: string, content: string) {
+      var parentAddr = new Address(GroveModel.ROOT_KEY, parentPath);
+      var op = GroveOp.Insert(parentAddr, index, null, NodeType.TEXT);
+      model.execute(op);
+
+      let childAddr = new Address(GroveModel.ROOT_KEY, parentPath.concat([index]));
+
+      for (var i = 0; i < tag.length; i++) {
+        op = GroveOp.Update(childAddr, 'tag', Char.Operation.Insert(tag[i], i));
+        model.execute(op);
+      }
+
+      for (var i = 0; i < content.length; i++) {
+        op = GroveOp.Update(childAddr, 'content', Char.Operation.Insert(content[i], i));
+        model.execute(op);
+      }
+  }
+
+  describe('Model Tests', () => {
+    it('hmmm', () => {
       let model = new GroveModel();
 
-      // Create a single child text node
-      var parentAddr = new Address(GroveModel.ROOT_KEY, []);
-      let op1 = GroveOp.Insert(parentAddr, 0, null, NodeType.TEXT);
-      model.execute(op1);
+      addChild(model, [], 0, 'a', 'hello');
+      assertEqual(model.render(), '<a>hello</a>', '');
 
-      parentAddr = new Address(GroveModel.ROOT_KEY, [0]);
-      let op2 = GroveOp.Update(parentAddr, 'content', Char.Operation.Insert('A', 0));
-      model.execute(op2);
+      addChild(model, [], 1, 'b', 'bye');
+      assertEqual(model.render(), '<a>hello</a><b>bye</b>', '');
 
-      assertEqual(model.render(), 'A', 'Just a single character added');
+      addChild(model, [0], 0, 'c', 'mornin');
+      assertEqual(model.render(), '<a>hello<c>mornin</c></a><b>bye</b>', '');
     });
   });
 });
