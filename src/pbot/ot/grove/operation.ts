@@ -229,7 +229,7 @@ module Grove {
           other.index() < addr.path()[cmp.value] ||
           (other.index() === addr.path()[cmp.value] && this.timestamp().siteId() < other.timestamp().siteId())
         ) {
-          addr[cmp.value] = addr[cmp.value] + 1;
+          addr.path()[cmp.value] = addr.path()[cmp.value] + 1;
         }
       }
 
@@ -268,7 +268,7 @@ module Grove {
       else if (cmp.type === ComparisonResultType.PREFIX) {
         if (other.index() < addr.path()[cmp.value]) {
           // other removes a sibling of addr[cmp.value]
-          addr[cmp.value] = addr[cmp.value] - 1;
+          addr.path()[cmp.value] = addr.path()[cmp.value] - 1;
         }
 
         else if (other.index() === addr.path()[cmp.value]) {
@@ -315,7 +315,7 @@ module Grove {
           (other.index() === addr.path()[cmp.value] && this.timestamp().siteId() < other.timestamp().siteId())
         ) {
           // insert is putting a new sibling before addr[cmp.value]
-          addr[cmp.value] = addr[cmp.value] + 1;
+          addr.path()[cmp.value] = addr.path()[cmp.value] + 1;
         }
       }
 
