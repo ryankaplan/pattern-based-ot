@@ -1,7 +1,7 @@
 # PBOT (Pattern Based OT)
 
 This project is a server and client for the Pattern-based Operational
-Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html)
+Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html).
 This implementation is published with permission from one of the
 authors - Prof. Sun.
 
@@ -10,7 +10,7 @@ implementing an OT algorithm seemed like a good start. It's not a library
 intended for production use. I'm making it public in case others find it
 interesting or the code useful.
 
-What's exciting about pattern-based OT? Here are two that I find particular
+What's exciting about pattern-based OT? Here are two things that I find particular
 cool:
 
 1. PBOT doesn't require any transformation of operations on the server. Most
