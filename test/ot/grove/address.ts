@@ -1,6 +1,6 @@
 /// <reference path='../../test.ts' />
 /// <reference path='../../typings/mocha.d.ts' />
-/// <reference path='../../../src/pbot/ot/grove/address.ts' />
+/// <reference path='../../../src/pbot/grove/address.ts' />
 
 describe('Grove Address', () => {
 

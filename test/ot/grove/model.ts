@@ -1,7 +1,7 @@
 /// <reference path='../../test.ts' />
 /// <reference path='../../typings/mocha.d.ts' />
-/// <reference path='../../../src/pbot/ot/grove/model.ts' />
-/// <reference path='../../../src/pbot/ot/grove/operation.ts' />
+/// <reference path='../../../src/pbot/grove/model.ts' />
+/// <reference path='../../../src/pbot/grove/operation.ts' />
 
 
 let GroveModel = Grove.Model;

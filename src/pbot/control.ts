@@ -1,7 +1,7 @@
 /// <reference path='operation.ts' />
-/// <reference path='../../base/deque.ts' />
-/// <reference path='../../base/list.ts' />
-/// <reference path='../../base/logging.ts' />
+/// <reference path='../base/deque.ts' />
+/// <reference path='../base/list.ts' />
+/// <reference path='../base/logging.ts' />
 
 function symmetricListTransform(op: OperationBase.Operation, list: Array<OperationBase.Operation>): Array<any> {
   var tOp = op;

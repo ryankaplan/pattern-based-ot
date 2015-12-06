@@ -1,8 +1,8 @@
 /// <reference path='messages.ts' />
 /// <reference path='operation.ts' />
-/// <reference path='../../base/lang.ts' />
-/// <reference path='../../base/list.ts' />
-/// <reference path='../../pbot/typings/ws/ws.d.ts' />
+/// <reference path='../base/lang.ts' />
+/// <reference path='../base/list.ts' />
+/// <reference path='typings/ws/ws.d.ts' />
 
 // Minimal interface for socket/socket server that needs to be implemented
 // to work with OTServer

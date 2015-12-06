@@ -1,12 +1,12 @@
 /// <reference path='../typings/mocha.d.ts' />
 
 /// <reference path='../../src/base/lang.ts' />
-/// <reference path='../../src/pbot/ot/text_op.ts' />
+/// <reference path='../../src/pbot/text_op.ts' />
 
 /// <reference path='ot_test_helpers.ts' />
 /// <reference path='../test.ts' />
 
-module Text {
+module TextTests {
   function processOps(ops:Array<TextOp>, initialChars:Array<string>) {
     let model = new TextOperationModel(initialChars.join());
     for (var op of ops) {

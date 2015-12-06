@@ -1,5 +1,5 @@
-/// <reference path='../../base/lang.ts' />
-/// <reference path='../../base/logging.ts' />
+/// <reference path='../base/lang.ts' />
+/// <reference path='../base/logging.ts' />
 
 class Timestamp {
   private _totalOrderingId:number = null;

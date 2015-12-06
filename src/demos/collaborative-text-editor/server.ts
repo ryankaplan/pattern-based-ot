@@ -1,5 +1,5 @@
-/// <reference path='../../pbot/ot/messages.ts' />
-/// <reference path='../../pbot/ot/ot_server.ts' />
+/// <reference path='../../pbot/messages.ts' />
+/// <reference path='../../pbot/ot_server.ts' />
 /// <reference path='../../pbot/typings/node/node.d.ts' />
 /// <reference path='../../pbot/typings/ws/ws.d.ts' />
 

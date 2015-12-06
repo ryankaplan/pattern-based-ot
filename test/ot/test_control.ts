@@ -1,10 +1,10 @@
 /// <reference path='../typings/mocha.d.ts' />
 
-/// <reference path='../../src/pbot/ot/control.ts' />
-/// <reference path='../../src/pbot/ot/operation.ts' />
-/// <reference path='../../src/pbot/ot/text_op.ts' />
-/// <reference path='../../src/pbot/ot/ot_server.ts' />
-/// <reference path='../../src/pbot/ot/messages.ts' />
+/// <reference path='../../src/pbot/control.ts' />
+/// <reference path='../../src/pbot/operation.ts' />
+/// <reference path='../../src/pbot/text_op.ts' />
+/// <reference path='../../src/pbot/ot_server.ts' />
+/// <reference path='../../src/pbot/messages.ts' />
 /// <reference path='../../src/pbot/socket_client_transport.ts' />
 
 /// <reference path='mock_server.ts' />
