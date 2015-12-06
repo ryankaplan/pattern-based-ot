@@ -27,7 +27,7 @@ describe('Grove Model', () => {
       model.execute(op1);
 
       parentAddr = new Address(GroveModel.ROOT_KEY, [0]);
-      let op2 = GroveOp.Update(parentAddr, 'content', TextOp.Insert('A', 0));
+      let op2 = GroveOp.Update(parentAddr, 'content', Char.Operation.Insert('A', 0));
       model.execute(op2);
 
       assertEqual(model.render(), 'A', 'Just a single character added');

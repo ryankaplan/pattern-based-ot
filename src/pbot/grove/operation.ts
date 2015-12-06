@@ -2,7 +2,7 @@
 /// <reference path='../operation.ts' />
 /// <reference path='../../base/list.ts' />
 /// <reference path='../../base/logging.ts' />
-/// <reference path='../text_op.ts' />
+/// <reference path='../char/text_op.ts' />
 
 module Grove {
   export enum GroveOpType {
@@ -26,7 +26,7 @@ module Grove {
 
       // props for UPDATE
       private _key: string, // k in the paper
-      private _textOp: TextOp // f in the paper
+      private _textOp: Char.Operation // f in the paper
     ) {
       super()
     }
@@ -43,7 +43,7 @@ module Grove {
       return new GroveOp(GroveOpType.DELETE, address, index, targetId, null, null, null);
     }
 
-    static Update(address: Address, key: string, f: TextOp) {
+    static Update(address: Address, key: string, f: Char.Operation) {
       return new GroveOp(GroveOpType.UPDATE, address, null, null, null, key, f);
     }
 
@@ -61,7 +61,7 @@ module Grove {
 
       // props for UPDATE
       this._key = parsed['key'];
-      this._textOp = TextOp.Noop();
+      this._textOp = Char.Operation.Noop();
       this._textOp.initWithJson(parsed['textOp']);
 
       // super
@@ -101,7 +101,7 @@ module Grove {
 
       // props for UPDATE
       this._key = other._key;
-      this._textOp = TextOp.Noop();
+      this._textOp = Char.Operation.Noop();
       this._textOp.copy(other._textOp);
 
       super.copy(other);
@@ -120,7 +120,7 @@ module Grove {
 
     setType(type: GroveOpType) { this._type = type; }
     setIndex(index: number) { this._index = index; }
-    setTextOp(textOp: TextOp) { this._textOp = textOp; }
+    setChar(textOp: Char.Operation) { this._textOp = textOp; }
     setAddress(address: Address) { this._address = address; }
 
     type(): GroveOpType { return this._type; }
@@ -129,7 +129,7 @@ module Grove {
     targetId(): string { return this._targetId; }
     nodeType(): NodeType { return this._nodeType; }
     key(): string { return this._key; }
-    textOp(): TextOp { return this._textOp; }
+    textOp(): Char.Operation { return this._textOp; }
 
     isDelete(): boolean { return this._type === GroveOpType.DELETE; }
     isInsert(): boolean { return this._type === GroveOpType.INSERT; }
@@ -459,7 +459,7 @@ module Grove {
 
       let copy = new Operation(null, null, null, null, null, null, null);
       copy.copy(this);
-      copy.setTextOp(textOp);
+      copy.setChar(textOp);
       return copy;
     }
   }

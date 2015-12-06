@@ -1,8 +1,8 @@
-/// <reference path='../../src/pbot/text_op.ts' />
+/// <reference path='../../src/pbot/char/text_op.ts' />
 
 /// <reference path='../test.ts' />
 
-function readableOp(op: TextOp): string {
+function readableOp(op: Char.Operation): string {
   return (
     op.readableType() + ' at index ' + op.location() +
 
@@ -11,7 +11,7 @@ function readableOp(op: TextOp): string {
   );
 }
 
-function validateCP1(a: TextOp, b: TextOp, text: string) {
+function validateCP1(a: Char.Operation, b: Char.Operation, text: string) {
   let DEBUG = false;
   if (DEBUG) {
     console.log('About to validate CP1 on the following doc: \'' + text + '\'');
@@ -27,11 +27,11 @@ function validateCP1(a: TextOp, b: TextOp, text: string) {
     console.log('b transform is ' + readableOp(tb));
   }
 
-  let modelAB = new TextOperationModel(text);
+  let modelAB = new Char.Model(text);
   modelAB.execute(a);
   modelAB.execute(tb);
 
-  let modelBA = new TextOperationModel(text);
+  let modelBA = new Char.Model(text);
   modelBA.execute(b);
   modelBA.execute(ta);
 

@@ -1,7 +1,7 @@
 /// <reference path='../base/logging.ts' />
 /// <reference path='control.ts' />
 /// <reference path='messages.ts' />
-/// <reference path='text_op.ts' />
+/// <reference path='char/text_op.ts' />
 
 // Used by the client
 class SocketClientTransport implements OTClientTransport {
@@ -54,7 +54,7 @@ class SocketClientTransport implements OTClientTransport {
           // We'll get operation notifications whenever someone in this room
           // broadcasts.
           let msg = <OperationMessage>rawMsg;
-          let textOp = new TextOp(null, null, null);
+          let textOp = new Char.Operation(null, null, null);
           textOp.initWithJson(msg.jsonOp);
           handleRemoteOp(textOp);
           break;

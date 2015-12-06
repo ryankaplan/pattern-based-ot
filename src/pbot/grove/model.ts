@@ -1,5 +1,5 @@
 /// <reference path='operation.ts' />
-/// <reference path='../text_op.ts' />
+/// <reference path='../char/text_op.ts' />
 
 module Grove {
   function preOrderTraversal(node: Node, func: (node: Node) => void): void {
@@ -21,7 +21,7 @@ module Grove {
     private _type: NodeType = NodeType.TEXT;
 
     // Start out with empty text
-    private _modelByKey: { [key: string]: TextOperationModel } = {};
+    private _modelByKey: { [key: string]: Char.Model } = {};
 
     constructor(private _name: string = null) {}
 
@@ -35,9 +35,9 @@ module Grove {
     addChild(node: Node) { addElementIfMissing(this._children, node); }
     removeChild(node: Node) { removeElement(this._children, node); }
 
-    modelForKey(key: string): TextOperationModel {
+    modelForKey(key: string): Char.Model {
       if (!(key in this._modelByKey)) {
-        this._modelByKey[key] = new TextOperationModel('');
+        this._modelByKey[key] = new Char.Model('');
       }
       return this._modelByKey[key];
     }

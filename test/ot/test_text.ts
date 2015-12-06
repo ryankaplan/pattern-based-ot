@@ -1,14 +1,16 @@
 /// <reference path='../typings/mocha.d.ts' />
 
 /// <reference path='../../src/base/lang.ts' />
-/// <reference path='../../src/pbot/text_op.ts' />
+/// <reference path='../../src/pbot/char/text_op.ts' />
 
 /// <reference path='ot_test_helpers.ts' />
 /// <reference path='../test.ts' />
 
 module TextTests {
-  function processOps(ops:Array<TextOp>, initialChars:Array<string>) {
-    let model = new TextOperationModel(initialChars.join());
+  
+  
+  function processOps(ops:Array<Char.Operation>, initialChars:Array<string>) {
+    let model = new Char.Model(initialChars.join());
     for (var op of ops) {
       model.execute(op);
     }
@@ -16,23 +18,23 @@ module TextTests {
   }
 
   function allInserts(document:string, char:string = 'x') {
-    let res: Array<TextOp> = [];
+    let res: Array<Char.Operation> = [];
     for (var i = 0; i < document.length + 1; i++) {
-      res.push(TextOp.Insert(char, i));
+      res.push(Char.Operation.Insert(char, i));
     }
     return res;
   }
 
   function allDeletes(document:string) {
-    let res: Array<TextOp> = [];
+    let res: Array<Char.Operation> = [];
     for (var i = 0; i < document.length; i++) {
-      res.push(TextOp.Delete(i));
+      res.push(Char.Operation.Delete(i));
     }
     return res;
   }
 
   function allPairs(arr1:Array<any>, arr2:Array<any>) {
-    let res: Array<Array<TextOp>> = [];
+    let res: Array<Array<Char.Operation>> = [];
     for (var first of arr1) {
       for (var second of arr2) {
         res.push([first, second]);
@@ -97,8 +99,8 @@ module TextTests {
     describe('Insert Insert', () => {
       it('should work TODO(ryan)', () => {
         // Test transform INSERT against INSERT
-        let a = TextOp.Insert('a', 10);
-        let b = TextOp.Insert('b', 0);
+        let a = Char.Operation.Insert('a', 10);
+        let b = Char.Operation.Insert('b', 0);
         validateCP1(a, b, '1xxxxxyyyyyzzzzz');
 
         let tA = a.transform(b);
@@ -108,8 +110,8 @@ module TextTests {
         assertEqual(tB.location(), 0);
 
         // Test ops with the same location
-        a = TextOp.Insert('a', 10);
-        b = TextOp.Insert('b', 10);
+        a = Char.Operation.Insert('a', 10);
+        b = Char.Operation.Insert('b', 10);
         validateCP1(a, b, '2xxxxxyyyyyzzzzz');
 
         tA = a.transform(b);
@@ -124,8 +126,8 @@ module TextTests {
       it('should work TODO(ryan)', () => {
         {
           // Test transform INSERT against INSERT
-          let a = TextOp.Insert('a', 10);
-          let b = TextOp.Delete(0);
+          let a = Char.Operation.Insert('a', 10);
+          let b = Char.Operation.Delete(0);
           validateCP1(a, b, '1xxxxxyyyyyzzzzz');
 
           let tA = a.transform(b);
@@ -138,8 +140,8 @@ module TextTests {
 
         {
           // Test ops with the same location
-          let a = TextOp.Insert('a', 10);
-          let b = TextOp.Delete(10);
+          let a = Char.Operation.Insert('a', 10);
+          let b = Char.Operation.Delete(10);
           validateCP1(a, b, '2xxxxxyyyyyzzzzz');
 
           let tA = a.transform(b);
@@ -155,8 +157,8 @@ module TextTests {
       it('should work TODO(ryan)', () => {
         {
           // Test transform INSERT against INSERT
-          let a = TextOp.Delete(10);
-          let b = TextOp.Insert('b', 0);
+          let a = Char.Operation.Delete(10);
+          let b = Char.Operation.Insert('b', 0);
           validateCP1(a, b, '1xxxxxyyyyyzzzzz');
 
           let tA = a.transform(b);
@@ -168,8 +170,8 @@ module TextTests {
 
         {
           // Test ops with the same location
-          let a = TextOp.Delete(10);
-          let b = TextOp.Insert('b', 10);
+          let a = Char.Operation.Delete(10);
+          let b = Char.Operation.Insert('b', 10);
           validateCP1(a, b, '2xxxxxyyyyyzzzzz');
 
           let tA = a.transform(b);
@@ -184,8 +186,8 @@ module TextTests {
     describe('Delete Delete', () => {
       it('should work TODO(ryan)', () => {
         // Test transform INSERT against INSERT
-        let a = TextOp.Delete(10);
-        let b = TextOp.Delete(0);
+        let a = Char.Operation.Delete(10);
+        let b = Char.Operation.Delete(0);
         validateCP1(a, b, '1xxxxxyyyyyzzzzz');
 
         let tA = a.transform(b);
@@ -195,8 +197,8 @@ module TextTests {
         assertEqual(tB.location(), 0);
 
         // Test ops with the same location
-        a = TextOp.Delete(10);
-        b = TextOp.Delete(10);
+        a = Char.Operation.Delete(10);
+        b = Char.Operation.Delete(10);
         validateCP1(a, b, '2xxxxxyyyyyzzzzz');
 
         tA = a.transform(b);
@@ -211,41 +213,41 @@ module TextTests {
       it('should work TODO(ryan)', () => {
         // Test executing text operations on a document
         let ops = [
-          TextOp.Insert('a', 0),
-          TextOp.Insert('b', 1),
-          TextOp.Insert('c', 2),
-          TextOp.Insert('x', 3),
-          TextOp.Insert('y', 4),
-          TextOp.Insert('z', 5),
-          TextOp.Delete(0),
-          TextOp.Delete(0),
-          TextOp.Insert('q', 0)
+          Char.Operation.Insert('a', 0),
+          Char.Operation.Insert('b', 1),
+          Char.Operation.Insert('c', 2),
+          Char.Operation.Insert('x', 3),
+          Char.Operation.Insert('y', 4),
+          Char.Operation.Insert('z', 5),
+          Char.Operation.Delete(0),
+          Char.Operation.Delete(0),
+          Char.Operation.Insert('q', 0)
         ];
 
         var empty:Array<string> = [];
         assertEqual(processOps(ops, empty), 'qcxyz');
 
         let invalidOps = [
-          TextOp.Insert('a', -1),
-          TextOp.Insert('b', 10000),
-          TextOp.Delete(-1),
-          TextOp.Delete(10000),
+          Char.Operation.Insert('a', -1),
+          Char.Operation.Insert('b', 10000),
+          Char.Operation.Delete(-1),
+          Char.Operation.Delete(10000),
         ];
 
         assertRaises(function () {
-          (new TextOperationModel('a')).execute(TextOp.Insert('a', -1));
+          (new Char.Model('a')).execute(Char.Operation.Insert('a', -1));
         }, 'Expect raise on insert at negative location');
 
         assertRaises(function () {
-          (new TextOperationModel('abc')).execute(TextOp.Insert('a', 4));
+          (new Char.Model('abc')).execute(Char.Operation.Insert('a', 4));
         }, 'Expect raise on insert at too big loation');
 
         assertRaises(function () {
-          (new TextOperationModel('a')).execute(TextOp.Delete(-1));
+          (new Char.Model('a')).execute(Char.Operation.Delete(-1));
         }, 'Expect raise on delete at negative location');
 
         assertRaises(function () {
-          (new TextOperationModel('a')).execute(TextOp.Delete(3));
+          (new Char.Model('a')).execute(Char.Operation.Delete(3));
         }, 'Expect raise on insert at too big location');
       });
     });

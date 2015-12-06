@@ -2,7 +2,7 @@
 
 /// <reference path='../../src/pbot/control.ts' />
 /// <reference path='../../src/pbot/operation.ts' />
-/// <reference path='../../src/pbot/text_op.ts' />
+/// <reference path='../../src/pbot/char/text_op.ts' />
 /// <reference path='../../src/pbot/ot_server.ts' />
 /// <reference path='../../src/pbot/messages.ts' />
 /// <reference path='../../src/pbot/socket_client_transport.ts' />
@@ -11,7 +11,7 @@
 /// <reference path='../test.ts' />
 
 interface TestClient {
-  model: TextOperationModel;
+  model: Char.Model;
   rawSocket: MockRawClientSocket;
   clientSocket: SocketClientTransport;
   ot: OTClient;
@@ -27,7 +27,7 @@ function setupTest(initialDocumentContent: string, documentId: string, numClient
   let clients: Array<any> = [];
 
   for (let i = 0; i < numClients; i++) {
-    let model = new TextOperationModel(initialDocumentContent);
+    let model = new Char.Model(initialDocumentContent);
     let rawSocket = new MockRawClientSocket(mockSocketServer);
     let clientSocket = new SocketClientTransport(rawSocket);
     let client = new OTClient(clientSocket, documentId, model);
@@ -50,16 +50,16 @@ describe('Pattern Based OT', () => {
       let initialDocument = '';
       let clients = setupTest(initialDocument, 'docId', 2);
 
-      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
-      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
-      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
-      clients[0].ot.handleLocalOp(TextOp.Delete(0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('a', 0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('b', 1));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('c', 2));
+      clients[0].ot.handleLocalOp(Char.Operation.Delete(0));
 
       assertEqual(clients[0].model.render(), 'bc');
       assertEqual(clients[1].model.render(), 'bc');
 
-      clients[1].ot.handleLocalOp(TextOp.Insert('a', 1));
-      clients[1].ot.handleLocalOp(TextOp.Delete(0));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('a', 1));
+      clients[1].ot.handleLocalOp(Char.Operation.Delete(0));
 
       assertEqual(clients[0].model.render(), 'ac');
       assertEqual(clients[1].model.render(), 'ac');
@@ -75,18 +75,18 @@ describe('Pattern Based OT', () => {
       clients[1].rawSocket.setIsQueueingReceives(true);
 
       // Client one types abc then deletes a
-      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
-      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
-      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
-      clients[0].ot.handleLocalOp(TextOp.Delete(0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('a', 0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('b', 1));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('c', 2));
+      clients[0].ot.handleLocalOp(Char.Operation.Delete(0));
 
       assertEqual(clients[0].model.render(), 'bc', 'model1 should have executed all local ops');
       assertEqual(clients[1].model.render(), '', 'model2 shouldn\'t have executed anything');
 
       // Client two types xyz
-      clients[1].ot.handleLocalOp(TextOp.Insert('x', 0));
-      clients[1].ot.handleLocalOp(TextOp.Insert('y', 1));
-      clients[1].ot.handleLocalOp(TextOp.Insert('z', 2));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('x', 0));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('y', 1));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('z', 2));
 
       assertEqual(clients[0].model.render(), 'bcxyz', 'model1 should have executed all ops since it\'s online');
       assertEqual(clients[1].model.render(), 'xyz', 'model2 should have executed only local ops since it\'s offline');
@@ -107,12 +107,12 @@ describe('Pattern Based OT', () => {
       clients[1].rawSocket.setIsQueueingReceives(true);
 
       // Client one types abc then deletes a
-      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
-      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
-      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('a', 0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('b', 1));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('c', 2));
 
       // Client two types xyz
-      clients[1].ot.handleLocalOp(TextOp.Insert('x', 0));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('x', 0));
 
       assertEqual(clients[0].model.render(), 'abc');
       assertEqual(clients[1].model.render(), 'x');
@@ -131,33 +131,33 @@ describe('Pattern Based OT', () => {
       var initialDocument = '';
       let clients = setupTest(initialDocument, 'docId', 3);
 
-      clients[0].ot.handleLocalOp(TextOp.Insert('a', 0));
-      clients[0].ot.handleLocalOp(TextOp.Insert('b', 1));
-      clients[0].ot.handleLocalOp(TextOp.Insert('c', 2));
-      clients[0].ot.handleLocalOp(TextOp.Delete(0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('a', 0));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('b', 1));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('c', 2));
+      clients[0].ot.handleLocalOp(Char.Operation.Delete(0));
 
       for (var i = 0; i < clients.length; i++) {
         assertEqual(clients[i].model.render(), 'bc', 'fail');
         clients[i].rawSocket.setIsQueueingReceives(true);
       }
 
-      clients[0].ot.handleLocalOp(TextOp.Insert('q', 1));
-      clients[0].ot.handleLocalOp(TextOp.Insert('r', 2));
-      clients[0].ot.handleLocalOp(TextOp.Delete(1));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('q', 1));
+      clients[0].ot.handleLocalOp(Char.Operation.Insert('r', 2));
+      clients[0].ot.handleLocalOp(Char.Operation.Delete(1));
 
       assertEqual(clients[0].model.render(), 'brc', 'fail');
 
-      clients[1].ot.handleLocalOp(TextOp.Delete(0));
-      clients[1].ot.handleLocalOp(TextOp.Insert('a', 0));
-      clients[1].ot.handleLocalOp(TextOp.Insert('b', 2));
+      clients[1].ot.handleLocalOp(Char.Operation.Delete(0));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('a', 0));
+      clients[1].ot.handleLocalOp(Char.Operation.Insert('b', 2));
 
       assertEqual(clients[1].model.render(), 'acb', 'fail');
 
-      clients[2].ot.handleLocalOp(TextOp.Delete(0));
-      clients[2].ot.handleLocalOp(TextOp.Delete(0));
-      clients[2].ot.handleLocalOp(TextOp.Insert('n', 0));
-      clients[2].ot.handleLocalOp(TextOp.Insert('o', 1));
-      clients[2].ot.handleLocalOp(TextOp.Insert('m', 2));
+      clients[2].ot.handleLocalOp(Char.Operation.Delete(0));
+      clients[2].ot.handleLocalOp(Char.Operation.Delete(0));
+      clients[2].ot.handleLocalOp(Char.Operation.Insert('n', 0));
+      clients[2].ot.handleLocalOp(Char.Operation.Insert('o', 1));
+      clients[2].ot.handleLocalOp(Char.Operation.Insert('m', 2));
 
       assertEqual(clients[2].model.render(), 'nom', 'fail');
 
