@@ -1,7 +1,7 @@
 /// <reference path='../base/logging.ts' />
 /// <reference path='control.ts' />
 /// <reference path='messages.ts' />
-/// <reference path='char/text_op.ts' />
+/// <reference path='char/operation.ts' />
 
 // Used by the client
 class SocketClientTransport implements OTClientTransport {

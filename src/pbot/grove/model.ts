@@ -1,5 +1,5 @@
 /// <reference path='operation.ts' />
-/// <reference path='../char/text_op.ts' />
+/// <reference path='../char/model.ts' />
 
 module Grove {
   function preOrderTraversal(node: Node, func: (node: Node) => void): void {

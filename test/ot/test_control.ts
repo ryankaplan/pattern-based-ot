@@ -2,7 +2,7 @@
 
 /// <reference path='../../src/pbot/control.ts' />
 /// <reference path='../../src/pbot/operation.ts' />
-/// <reference path='../../src/pbot/char/text_op.ts' />
+/// <reference path='../../src/pbot/char/model.ts' />
 /// <reference path='../../src/pbot/ot_server.ts' />
 /// <reference path='../../src/pbot/messages.ts' />
 /// <reference path='../../src/pbot/socket_client_transport.ts' />

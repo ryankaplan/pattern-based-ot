@@ -2,7 +2,7 @@
 /// <reference path='../operation.ts' />
 /// <reference path='../../base/list.ts' />
 /// <reference path='../../base/logging.ts' />
-/// <reference path='../char/text_op.ts' />
+/// <reference path='../char/model.ts' />
 
 module Grove {
   export enum GroveOpType {
