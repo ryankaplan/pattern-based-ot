@@ -1,3 +1,4 @@
+/// <reference path='../../../src/base/logging.ts' />
 /// <reference path='../../test.ts' />
 /// <reference path='../../typings/mocha.d.ts' />
 /// <reference path='../../../src/pbot/grove/address.ts' />
