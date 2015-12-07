@@ -85,12 +85,17 @@ watchTask(['demo'], function () {
 desc('Compile and run all tests');
 task('test', [DIR_BUILD_TEST], function () {
   var sources = [
+    // Test control algorithm
     'test/ot/test_control.ts',
-    'test/ot/test_text.ts',
 
+    // Test Char operations
+    'test/ot/char/model.ts',
+    'test/ot/char/operation.ts',
+
+    // Test Grove operations
     'test/ot/grove/address.ts',
-    'test/ot/grove/operation.ts',
-    'test/ot/grove/model.ts'
+    'test/ot/grove/model.ts',
+    'test/ot/grove/operation.ts'
   ];
   var output = path.join(DIR_BUILD_TEST, 'test.js');
   buildTypescriptFiles(sources, output, function () {
