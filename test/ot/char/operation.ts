@@ -1,8 +1,6 @@
 /// <reference path='../../typings/mocha.d.ts' />
-
 /// <reference path='../../../src/base/lang.ts' />
 /// <reference path='../../../src/pbot/char/model.ts' />
-
 /// <reference path='../ot_test_helpers.ts' />
 /// <reference path='../../test.ts' />
 
@@ -19,16 +17,6 @@ module TextTests {
     let res: Array<Char.Operation> = [];
     for (var i = 0; i < document.length; i++) {
       res.push(Char.Operation.Delete(i));
-    }
-    return res;
-  }
-
-  function allPairs(arr1:Array<any>, arr2:Array<any>) {
-    let res: Array<Array<Char.Operation>> = [];
-    for (var first of arr1) {
-      for (var second of arr2) {
-        res.push([first, second]);
-      }
     }
     return res;
   }
@@ -58,22 +46,22 @@ module TextTests {
           // Validate CP1 for every combination of pairs of operations on a document
           // of length i.
           let doc = bigString.substr(0, i);
-          var pairs = allPairs(allInserts(doc, 'a'), allInserts(doc, 'b'));
+          var pairs = Base.allPairs(allInserts(doc, 'a'), allInserts(doc, 'b'));
           for (var [op1, op2] of pairs) {
             validateCP1(op1, op2, doc);
           }
 
-          pairs = allPairs(allInserts(doc, 'a'), allDeletes(doc));
+          pairs = Base.allPairs(allInserts(doc, 'a'), allDeletes(doc));
           for (var [op1, op2] of pairs) {
             validateCP1(op1, op2, doc);
           }
 
-          pairs = allPairs(allDeletes(doc), allInserts(doc, 'a'));
+          pairs = Base.allPairs(allDeletes(doc), allInserts(doc, 'a'));
           for (var [op1, op2] of pairs) {
             validateCP1(op1, op2, doc);
           }
 
-          pairs = allPairs(allDeletes(doc), allDeletes(doc));
+          pairs = Base.allPairs(allDeletes(doc), allDeletes(doc));
           for (var [op1, op2] of pairs) {
             validateCP1(op1, op2, doc);
           }

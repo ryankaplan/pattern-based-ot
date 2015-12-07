@@ -15,6 +15,16 @@ module Base {
     LESS_THAN
   }
 
+  export function allPairs(arr1:Array<any>, arr2:Array<any>) {
+    let res: Array<Array<Char.Operation>> = [];
+    for (var first of arr1) {
+      for (var second of arr2) {
+        res.push([first, second]);
+      }
+    }
+    return res;
+  }
+
   export function compare(first: any, second: any):ComparisonResult {
     if (first < second) {
       return ComparisonResult.LESS_THAN;
