@@ -69,34 +69,41 @@ module Grove {
 
     public render(): string {
       var result: Array<string> = [];
-      for (var name in this._roots) {
 
-        traverse(
-          this._roots[name],
+      traverse(
+        this._roots[Model.ROOT_KEY],
 
-          // pre
-          (node: Node) => {
-            let tag = node.modelForKey('tag').render();
-            if (tag.length !== 0) {
-              result.push('<' + tag + '>');
-            }
-
-            let content = node.modelForKey('content').render();
-            if (content.length !== 0) {
-              result.push(content);
-            }
-          },
-
-          // post
-          (node: Node) => {
-            let tag = node.modelForKey('tag').render();
-            if (tag.length !== 0) {
-              result.push('</' + tag + '>');
-            }
+        // pre
+        (node: Node) => {
+          let tag = node.modelForKey('tag').render();
+          if (tag.length !== 0) {
+            result.push('<' + tag + '>');
           }
-        );
-      }
+
+          let content = node.modelForKey('content').render();
+          if (content.length !== 0) {
+            result.push(content);
+          }
+        },
+
+        // post
+        (node: Node) => {
+          let tag = node.modelForKey('tag').render();
+          if (tag.length !== 0) {
+            result.push('</' + tag + '>');
+          }
+        }
+      );
+
       return result.join('');
+    }
+
+    public nodeValueForKey(address: Address, key: string): string {
+      let node = this.nodeAtAddress(address);
+      if (node) {
+        return node.modelForKey(key).render();
+      }
+      return null;
     }
 
     private nodeAtAddress(address: Address): Node {
