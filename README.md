@@ -10,7 +10,7 @@ implementing an OT algorithm seemed like a good start. It's not a library
 intended for production use. I'm making it public in case others find it
 interesting or the code useful.
 
-What's exciting about pattern-based OT? Here are two things that I find particular
+What's exciting about pattern-based OT? Here are two things that I find particularly
 cool:
 
 1. PBOT doesn't require any transformation of operations on the server. Most
