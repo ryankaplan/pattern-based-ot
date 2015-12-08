@@ -16,7 +16,7 @@ module Base {
   }
 
   export function allPairs(arr1:Array<any>, arr2:Array<any>) {
-    let res: Array<Array<Char.Operation>> = [];
+    let res: Array<Array<any>> = [];
     for (var first of arr1) {
       for (var second of arr2) {
         res.push([first, second]);
