@@ -4,7 +4,7 @@
 /// <reference path='../ot_test_helpers.ts' />
 /// <reference path='../../test.ts' />
 
-module TextTests {
+module Char {
   function allInserts(document:string, char:string = 'x') {
     let res: Array<Char.Operation> = [];
     for (var i = 0; i < document.length + 1; i++) {
