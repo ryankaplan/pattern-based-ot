@@ -1,5 +1,5 @@
-/// <reference path='../../base/lang.ts' />
-/// <reference path='../../base/logging.ts' />
+/// <reference path='../base/lang.ts' />
+/// <reference path='../base/logging.ts' />
 
 class Timestamp {
   private _totalOrderingId:number = null;
@@ -30,7 +30,7 @@ class Timestamp {
     this._totalOrderingId = other._totalOrderingId;
   }
 
-  static compare(first:Timestamp, second:Timestamp):ComparisonResult {
+  static compare(first:Timestamp, second:Timestamp): Base.ComparisonResult {
     var firstHasTotalOrderingId = first !== null && first._totalOrderingId !== null;
     var secondHasTotalOrderingId = second !== null && second._totalOrderingId != null;
 
@@ -39,14 +39,14 @@ class Timestamp {
     }
 
     if (!firstHasTotalOrderingId) {
-      return ComparisonResult.GREATER_THAN;
+      return Base.ComparisonResult.GREATER_THAN;
     }
 
     if (!secondHasTotalOrderingId) {
-      return ComparisonResult.LESS_THAN;
+      return Base.ComparisonResult.LESS_THAN;
     }
 
-    return compare(first._totalOrderingId, second._totalOrderingId);
+    return Base.compare(first._totalOrderingId, second._totalOrderingId);
   }
 
   siteId(): string {
@@ -70,41 +70,49 @@ class Timestamp {
   }
 }
 
-abstract class Operation {
-  protected _timestamp:Timestamp;
+module OperationBase {
 
-  initWithJson(parsed:any) {
-    if (parsed['timestamp'] !== null) {
-      this._timestamp = new Timestamp(null, null, null);
-      this._timestamp.initWithJson(parsed['timestamp']);
+  // Operation base class
+  export abstract class Operation {
+    protected _timestamp: Timestamp;
+
+    initWithJson(parsed: any) {
+      if (parsed['timestamp'] !== null) {
+        this._timestamp = new Timestamp(null, null, null);
+        this._timestamp.initWithJson(parsed['timestamp']);
+      }
     }
-  }
 
-  fillJson(json:any) {
-    if (this._timestamp) {
-      json['timestamp'] = {};
-      this._timestamp.fillJson(json['timestamp']);
+    fillJson(json: any) {
+      if (this._timestamp) {
+        json['timestamp'] = {};
+        this._timestamp.fillJson(json['timestamp']);
+      }
     }
-  }
 
-  copy(other:Operation) {
-    if (other._timestamp) {
-      this._timestamp = new Timestamp(null, null, null);
-      this._timestamp.copy(other._timestamp);
+    copy(other: Operation) {
+      if (other._timestamp) {
+        this._timestamp = new Timestamp(null, null, null);
+        this._timestamp.copy(other._timestamp);
+      }
     }
+
+    public timestamp(): Timestamp {
+      return this._timestamp;
+    }
+
+    public setTimestamp(timestamp: Timestamp):void {
+      this._timestamp = timestamp;
+    }
+
+    public abstract transform(other: Operation): Operation;
   }
 
-  public timestamp():Timestamp {
-    return this._timestamp;
+  // Operation Model base class
+  export interface Model {
+    copy(): Model;
+    equals(other: Model): boolean;
+    execute(op: Operation): void;
   }
-
-  public setTimestamp(timestamp:Timestamp):void {
-    this._timestamp = timestamp;
-  }
-
-  public abstract transform(other:Operation):Operation;
 }
 
-interface OperationModel {
-  execute(op:Operation): void;
-}

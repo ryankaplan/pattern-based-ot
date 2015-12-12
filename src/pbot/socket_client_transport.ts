@@ -1,7 +1,7 @@
 /// <reference path='../base/logging.ts' />
-/// <reference path='ot/control.ts' />
-/// <reference path='ot/messages.ts' />
-/// <reference path='ot/text_op.ts' />
+/// <reference path='control.ts' />
+/// <reference path='messages.ts' />
+/// <reference path='char/operation.ts' />
 
 // Used by the client
 class SocketClientTransport implements OTClientTransport {
@@ -16,7 +16,7 @@ class SocketClientTransport implements OTClientTransport {
     // which will always be called before the first call to handleRemoteOp
     handleSiteId: (siteId: string) => void,
     handleConnectedClients:(connectedClients: Array<string>) => void,
-    handleRemoteOp: (op: Operation) => void,
+    handleRemoteOp: (op: OperationBase.Operation) => void,
     handleInitialLoadBegin: () => void,
     handleInitialLoadEnd: () => void
   ): void {
@@ -54,7 +54,7 @@ class SocketClientTransport implements OTClientTransport {
           // We'll get operation notifications whenever someone in this room
           // broadcasts.
           let msg = <OperationMessage>rawMsg;
-          let textOp = new TextOp(null, null, null);
+          let textOp = new Char.Operation(null, null, null);
           textOp.initWithJson(msg.jsonOp);
           handleRemoteOp(textOp);
           break;
@@ -74,7 +74,7 @@ class SocketClientTransport implements OTClientTransport {
   }
 
   // Send an operation to all other sites
-  public broadcastOperation(operation: Operation):void {
+  public broadcastOperation(operation: OperationBase.Operation):void {
     let jsonOp = {};
     operation.fillJson(jsonOp);
     this._socket.send(JSON.stringify(new OperationMessage(jsonOp)));

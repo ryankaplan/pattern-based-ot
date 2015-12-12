@@ -1,7 +1,7 @@
-/// <reference path='../../pbot/ot/messages.ts' />
-/// <reference path='../../pbot/ot/ot_server.ts' />
-/// <reference path='../../pbot/typings/node/node.d.ts' />
-/// <reference path='../../pbot/typings/ws/ws.d.ts' />
+/// <reference path='../../../pbot/messages.ts' />
+/// <reference path='../../../pbot/ot_server.ts' />
+/// <reference path='../../../pbot/typings/node/node.d.ts' />
+/// <reference path='../../../pbot/typings/ws/ws.d.ts' />
 
 let ws = require('ws');
 let WebSocketServer = ws.Server;
@@ -19,7 +19,7 @@ app.use(express.static(__dirname + '/static'));
 // with a random documentId
 app.get('/', function (req: any, res: any) {
   res.writeHead(302, {
-    'Location': '/html/index.html?documentId=' + randomString(6, ALPHA_NUMERIC)
+    'Location': '/html/index.html?documentId=' + Base.randomString(6, Base.ALPHA_NUMERIC)
   });
   res.end();
 });

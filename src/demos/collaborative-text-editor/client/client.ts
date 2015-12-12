@@ -1,11 +1,11 @@
-/// <reference path='../../base/logging.ts' />
-/// <reference path='../../base/url.ts' />
-/// <reference path='../../pbot/ot/control.ts' />
-/// <reference path='../../pbot/ot/operation.ts' />
-/// <reference path='../../pbot/ot/text_op.ts' />
-/// <reference path='../../pbot/socket_client_transport.ts' />
-/// <reference path='typings/diff_match_patch/diff_match_patch.d.ts' />
-/// <reference path='typings/jquery/jquery.d.ts' />
+/// <reference path='../../../base/logging.ts' />
+/// <reference path='../../../base/url.ts' />
+/// <reference path='../../../pbot/control.ts' />
+/// <reference path='../../../pbot/operation.ts' />
+/// <reference path='../../../pbot/char/model.ts' />
+/// <reference path='../../../pbot/socket_client_transport.ts' />
+/// <reference path='../typings/diff_match_patch/diff_match_patch.d.ts' />
+/// <reference path='../typings/jquery/jquery.d.ts' />
 
 // Messages that are send through our sockets:
 //
@@ -24,7 +24,7 @@
 class CollaborativeTextController implements OTClientListener {
   private _socket = new SocketClientTransport(new WebSocket('ws://localhost:3000/', ['pbotProtocol']));
   private _client:OTClient = null;
-  private _model: TextOperationModel = null;
+  private _model: Char.Model = null;
 
   // jQuery wrapped div of the textarea that we're watching
   private _textArea: any;
@@ -40,7 +40,7 @@ class CollaborativeTextController implements OTClientListener {
     this._loadingMessage.show();
     this._textArea.hide();
 
-    this._model = new TextOperationModel('');
+    this._model = new Char.Model('');
 
     let documentId = getDocumentQueryArg('documentId');
     this._client = new OTClient(this._socket, documentId, this._model);
@@ -61,8 +61,8 @@ class CollaborativeTextController implements OTClientListener {
     this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
   }
 
-  clientDidHandleRemoteOps(model:OperationModel) {
-    let textModel:TextOperationModel = <TextOperationModel>model;
+  clientDidHandleRemoteOps(model: OperationBase.Model) {
+    let textModel: Char.Model = <Char.Model>model;
     this._lastKnownDocumentContent = textModel.render();
     this._textArea.val(this._lastKnownDocumentContent);
   }
@@ -89,7 +89,7 @@ class CollaborativeTextController implements OTClientListener {
     var results:Array<Array<any>> = differ.diff_main(oldText, newText);
 
     var cursorLocation = 0;
-    var operationBuffer:Array<TextOp> = [];
+    var operationBuffer:Array<Char.Operation> = [];
     for (var i = 0; i < results.length; i++) {
       var op = results[i][0];
       var text = results[i][1];
@@ -97,7 +97,7 @@ class CollaborativeTextController implements OTClientListener {
       if (op == DIFF_DELETE) {
         for (var j = 0; j < text.length; j++) {
           debugLog("Delete char " + text[j] + " at index " + cursorLocation);
-          operationBuffer.push(TextOp.Delete(cursorLocation));
+          operationBuffer.push(Char.Operation.Delete(cursorLocation));
 
           // cursorLocation doesn't change. We moved forward one character in the string
           // but deleted that character, so our 'index' into the string hasn't changed.
@@ -107,7 +107,7 @@ class CollaborativeTextController implements OTClientListener {
       else if (op == DIFF_INSERT) {
         for (var j = 0; j < text.length; j++) {
           debugLog("Insert char " + text[j] + " after char at index " + cursorLocation);
-          operationBuffer.push(TextOp.Insert(text[j], cursorLocation));
+          operationBuffer.push(Char.Operation.Insert(text[j], cursorLocation));
           cursorLocation += 1;
         }
       }

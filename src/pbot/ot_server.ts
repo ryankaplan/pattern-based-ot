@@ -1,8 +1,8 @@
 /// <reference path='messages.ts' />
 /// <reference path='operation.ts' />
-/// <reference path='../../base/lang.ts' />
-/// <reference path='../../base/list.ts' />
-/// <reference path='../../pbot/typings/ws/ws.d.ts' />
+/// <reference path='../base/lang.ts' />
+/// <reference path='../base/list.ts' />
+/// <reference path='typings/ws/ws.d.ts' />
 
 // Minimal interface for socket/socket server that needs to be implemented
 // to work with OTServer
@@ -68,7 +68,7 @@ function connectServerSocket(otServer: OTServer, rawSocket: IWebSocket) {
 
 class OpenDocumentState {
   private _docId: string;
-  private _toGen = new IDGenerator();
+  private _toGen = new Base.NumberIdGenerator();
   private _connectedSites: Array<OTSocketWrapper> = [];
   private _messageHistory: Array<OTMessage> = [];
 
@@ -92,7 +92,7 @@ class OpenDocumentState {
 }
 
 class OTServer {
-  private _siteIdGen = new IDGenerator();
+  private _siteIdGen = new Base.NumberIdGenerator();
   private _docStateById: { [docId: string]: OpenDocumentState } = {};
 
   private docStateForId(documentId: string): OpenDocumentState {
