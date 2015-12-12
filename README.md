@@ -56,6 +56,19 @@ To get started:
 
 To run tests, run `jake test` from the project root.
 
+#Project Structure
+
+- src/ :: all 'library' code
+  - base/ :: language and platform utilities that aren't specific to this project
+  - demos/ :: demonstration applications that use the pbot 'library'
+  - pbot/ :: pattern-based OT logic
+    - control.ts :: pattern-based OT control algorithm
+    - char/ :: character-based operations
+    - grove/ :: grove (tree) based operations
+
+/test contains all test code. Subfolders of test/ mirror those of src. So
+tests for src/pbot/char live in test/pbot/char.
+
 # Citations
 
 [1] Yi Xu, Chengzheng Sun, "Conditions and Patterns for Achieving Convergence in OT-based Co-Editors", IEEE
