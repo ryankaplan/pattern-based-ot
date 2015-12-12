@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES5",
+
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "out": "build/test/test.js",
+        "sourceMap": true
+    },
+    "files": [
+        "ot/test_control.ts",
+
+        "ot/char/model.ts",
+        "ot/char/operation.ts",
+
+        "ot/grove/address.ts",
+        "ot/grove/model.ts",
+        "ot/grove/operation.ts"
+    ]
+}

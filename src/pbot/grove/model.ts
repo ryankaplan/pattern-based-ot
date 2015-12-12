@@ -219,7 +219,7 @@ module Grove {
       }
 
       else {
-        fail('Unrecognized GroveOpType + ', op.readableType());
+        fail('Unrecognized OperationType + ', op.readableType());
       }
     }
 
@@ -229,17 +229,17 @@ module Grove {
       let index = path[path.length - 1];
       let parentPath = path.slice(0, path.length - 1);
 
-      var parentAddr = new Address(GroveModel.ROOT_ID, parentPath);
-      var op = GroveOp.Insert(parentAddr, index, null, NodeType.TEXT);
+      var parentAddr = new Address(Model.ROOT_ID, parentPath);
+      var op = Operation.Insert(parentAddr, index, null, NodeType.TEXT);
       this.execute(op);
 
-      let childAddr = new Address(GroveModel.ROOT_ID, parentPath.concat([index]));
+      let childAddr = new Address(Model.ROOT_ID, parentPath.concat([index]));
 
       for (var key in nodeValues) {
         let value = nodeValues[key];
 
         for (var i = 0; i < value.length; i++) {
-          op = GroveOp.Update(childAddr, key, Char.Operation.Insert(value[i], i));
+          op = Operation.Update(childAddr, key, Char.Operation.Insert(value[i], i));
           this.execute(op);
         }
       }
@@ -249,7 +249,7 @@ module Grove {
       let index = path[path.length - 1];
       let parentPath = path.slice(0, path.length - 1);
 
-      var parentAddr = new Address(GroveModel.ROOT_ID, parentPath);
+      var parentAddr = new Address(Model.ROOT_ID, parentPath);
 
       var newId: string = null;
       while (true) {
@@ -262,7 +262,7 @@ module Grove {
       }
 
       let targetId = newId;
-      let op = GroveOp.Delete(parentAddr, index, targetId);
+      let op = Operation.Delete(parentAddr, index, targetId);
       this.execute(op);
 
       return targetId;
@@ -272,19 +272,19 @@ module Grove {
       let index = path[path.length - 1];
       let parentPath = path.slice(0, path.length - 1);
       var op: Grove.Operation = null;
-      let nodeAddr = new Address(GroveModel.ROOT_ID, path);
+      let nodeAddr = new Address(Model.ROOT_ID, path);
 
       for (var key in nodeValues) {
         // Delete the current value
         let currentValue = this.nodeValueForKey(nodeAddr, key);
         for (var i = 0; i < currentValue.length; i++) {
-          op = GroveOp.Update(nodeAddr, key, Char.Operation.Delete(0));
+          op = Operation.Update(nodeAddr, key, Char.Operation.Delete(0));
           this.execute(op);
         }
 
         let value = nodeValues[key];
         for (var i = 0; i < value.length; i++) {
-          op = GroveOp.Update(nodeAddr, key, Char.Operation.Insert(value[i], i));
+          op = Operation.Update(nodeAddr, key, Char.Operation.Insert(value[i], i));
           this.execute(op);
         }
       }

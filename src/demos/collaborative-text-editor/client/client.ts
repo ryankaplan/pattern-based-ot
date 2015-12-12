@@ -1,11 +1,11 @@
-/// <reference path='../../base/logging.ts' />
-/// <reference path='../../base/url.ts' />
-/// <reference path='../../pbot/control.ts' />
-/// <reference path='../../pbot/operation.ts' />
-/// <reference path='../../pbot/char/model.ts' />
-/// <reference path='../../pbot/socket_client_transport.ts' />
-/// <reference path='typings/diff_match_patch/diff_match_patch.d.ts' />
-/// <reference path='typings/jquery/jquery.d.ts' />
+/// <reference path='../../../base/logging.ts' />
+/// <reference path='../../../base/url.ts' />
+/// <reference path='../../../pbot/control.ts' />
+/// <reference path='../../../pbot/operation.ts' />
+/// <reference path='../../../pbot/char/model.ts' />
+/// <reference path='../../../pbot/socket_client_transport.ts' />
+/// <reference path='../typings/diff_match_patch/diff_match_patch.d.ts' />
+/// <reference path='../typings/jquery/jquery.d.ts' />
 
 // Messages that are send through our sockets:
 //

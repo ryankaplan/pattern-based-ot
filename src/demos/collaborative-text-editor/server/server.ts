@@ -1,7 +1,7 @@
-/// <reference path='../../pbot/messages.ts' />
-/// <reference path='../../pbot/ot_server.ts' />
-/// <reference path='../../pbot/typings/node/node.d.ts' />
-/// <reference path='../../pbot/typings/ws/ws.d.ts' />
+/// <reference path='../../../pbot/messages.ts' />
+/// <reference path='../../../pbot/ot_server.ts' />
+/// <reference path='../../../pbot/typings/node/node.d.ts' />
+/// <reference path='../../../pbot/typings/ws/ws.d.ts' />
 
 let ws = require('ws');
 let WebSocketServer = ws.Server;

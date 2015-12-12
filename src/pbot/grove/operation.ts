@@ -32,19 +32,19 @@ module Grove {
     }
 
     static Noop() {
-      return new GroveOp(GroveOpType.NOOP, null, null, null, null, null, null);
+      return new Operation(GroveOpType.NOOP, null, null, null, null, null, null);
     }
 
     static Insert(address: Address, index: number, targetId: string, type: NodeType) {
-      return new GroveOp(GroveOpType.INSERT, address, index, targetId, type, null, null);
+      return new Operation(GroveOpType.INSERT, address, index, targetId, type, null, null);
     }
 
     static Delete(address: Address, index: number, targetId: string) {
-      return new GroveOp(GroveOpType.DELETE, address, index, targetId, null, null, null);
+      return new Operation(GroveOpType.DELETE, address, index, targetId, null, null, null);
     }
 
     static Update(address: Address, key: string, f: Char.Operation) {
-      return new GroveOp(GroveOpType.UPDATE, address, null, null, null, key, f);
+      return new Operation(GroveOpType.UPDATE, address, null, null, null, key, f);
     }
 
     initWithJson(parsed: any): void {
