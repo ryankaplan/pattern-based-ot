@@ -11,34 +11,35 @@ function readableOp(op: Char.Operation): string {
   );
 }
 
-function validateCP1(a: Char.Operation, b: Char.Operation, text: string) {
-  let DEBUG = false;
-  if (DEBUG) {
-    console.log('About to validate CP1 on the following doc: \'' + text + '\'');
-    console.log('a: ' + readableOp(a));
-    console.log('b: ' + readableOp(b));
-  }
-
+function validateCP1(
+    a: Char.Operation,
+    b: Char.Operation,
+    model: OperationBase.Model,
+    eq: (a: OperationBase.Model, b: OperationBase.Model) => boolean
+  ) {
   let ta = a.transform(b);
   let tb = b.transform(a);
 
-  if (DEBUG) {
-    console.log('a transform is ' + readableOp(ta));
-    console.log('b transform is ' + readableOp(tb));
-  }
-
-  let modelAB = new Char.Model(text);
+  let modelAB = model.copy();
   modelAB.execute(a);
   modelAB.execute(tb);
 
-  let modelBA = new Char.Model(text);
+  let modelBA = model.copy();
   modelBA.execute(b);
   modelBA.execute(ta);
 
-  assertEqual(modelAB.render(), modelBA.render());
+  if (!eq(modelAB, modelBA)) {
+    console.log('Begin failure dump\n\n\n');
+    console.log('a: ' + JSON.stringify(a, null, 2));
+    console.log('b: ' + JSON.stringify(b, null, 2));
+    console.log('tA: ' + JSON.stringify(ta, null, 2));
+    console.log('tB: ' + JSON.stringify(tb, null, 2));
 
-  if (DEBUG) {
-    console.log('Validated CP1: ' + modelAB.render() + ' ' + modelBA.render());
+    console.log('modelAB: ' + JSON.stringify(modelAB, null, 2));
+    console.log('modelBA: ' + JSON.stringify(modelBA, null, 2));
+    console.log('End failure dump\n\n\n');
+
+    fail('CP1 validation failure!');
   }
 }
 

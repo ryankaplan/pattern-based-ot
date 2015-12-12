@@ -25,7 +25,8 @@
         {
             "taskName": "test",
             "args": [],
-            "isTestCommand": true
+            "isTestCommand": true,
+            "problemMatcher": "$tsc"
         }
     ]
 }

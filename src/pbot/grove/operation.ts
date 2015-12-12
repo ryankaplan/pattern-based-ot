@@ -61,8 +61,11 @@ module Grove {
 
       // props for UPDATE
       this._key = parsed['key'];
-      this._textOp = Char.Operation.Noop();
-      this._textOp.initWithJson(parsed['textOp']);
+
+      if ('textOp' in parsed) {
+        this._textOp = Char.Operation.Noop();
+        this._textOp.initWithJson(parsed['textOp']);
+      }
 
       // super
       super.initWithJson(parsed);
@@ -82,8 +85,11 @@ module Grove {
 
       // props for UPDATE
       json['key'] = this._key;
-      json['textOp'] = {};
-      this._textOp.fillJson(json['textOp']);
+
+      if (this._textOp) {
+        json['textOp'] = {};
+        this._textOp.fillJson(json['textOp']);
+      }
 
       // super
       super.fillJson(json);
@@ -101,8 +107,11 @@ module Grove {
 
       // props for UPDATE
       this._key = other._key;
-      this._textOp = Char.Operation.Noop();
-      this._textOp.copy(other._textOp);
+
+      if (other._textOp) {
+        this._textOp = Char.Operation.Noop();
+        this._textOp.copy(other._textOp);
+      }
 
       super.copy(other);
     }
@@ -322,7 +331,8 @@ module Grove {
       else if (cmp.type === ComparisonResultType.SAME) {
         // insert puts a new sibling before the node this
         // acts on
-        if (other.index() < this.index()) {
+        // TODO(ryan): paper says this is <, but I think it's <=
+        if (other.index() <= this.index()) {
           index += 1;
         }
       }
@@ -340,6 +350,7 @@ module Grove {
       var addr = this.address().copy();
       let index = this.index();
       let type = this.type();
+      let targetId = this.targetId();
 
       if (cmp.type === ComparisonResultType.SAME) {
         if (other.index() < this.index()) {
@@ -348,12 +359,13 @@ module Grove {
           index -= 1;
         }
 
-        else if (other.index() === this.index() && this.timestamp().siteId() === other.timestamp().siteId()) {
+        else if (other.index() === this.index()) {
           // Both ops delete the same node
           // TODO(ryan): the siteId check in this conditional doesn't make sense to
           // me, but it's in the paper. This might fail the CP2 validation. I'll
           // find out when I write tests.
           type = GroveOpType.NOOP;
+          assert(this.timestamp().siteId() !== other.timestamp().siteId());
         }
       }
 

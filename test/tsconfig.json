@@ -10,13 +10,13 @@
         "sourceMap": true
     },
     "files": [
-        "ot/test_control.ts",
+        "pbot/test_control.ts",
 
-        "ot/char/model.ts",
-        "ot/char/operation.ts",
+        "pbot/char/model.ts",
+        "pbot/char/operation.ts",
 
-        "ot/grove/address.ts",
-        "ot/grove/model.ts",
-        "ot/grove/operation.ts"
+        "pbot/grove/address.ts",
+        "pbot/grove/model.ts",
+        "pbot/grove/operation.ts"
     ]
 }

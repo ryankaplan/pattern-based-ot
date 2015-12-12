@@ -7,12 +7,16 @@ module Char {
   export class Model implements OperationBase.Model {
     private _chars: Array<string>;
 
-    constructor(text:string) {
+    constructor(text: string) {
       this._chars = text.split('');
     }
 
-    public render():string {
+    public render(): string {
       return this._chars.join('');
+    }
+
+    public copy(): Model {
+      return new Model(this._chars.join(''));
     }
 
     public equals(other: Model): boolean {

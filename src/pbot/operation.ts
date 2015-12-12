@@ -110,8 +110,9 @@ module OperationBase {
 
   // Operation Model base class
   export interface Model {
-    execute(op: Operation): void;
+    copy(): Model;
     equals(other: Model): boolean;
+    execute(op: Operation): void;
   }
 }
 

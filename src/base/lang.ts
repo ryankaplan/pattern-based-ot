@@ -10,7 +10,7 @@ module Base {
   export var ALPHA_NUMERIC = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   export class NumberIdGenerator {
-    constructor(private _counter:number = -1) {
+    constructor(private _counter: number = -1) {
     }
 
     next(): number {
@@ -25,7 +25,7 @@ module Base {
     LESS_THAN
   }
 
-  export function allPairs(arr1:Array<any>, arr2:Array<any>) {
+  export function allPairs(arr1: Array<any>, arr2: Array<any>) {
     let res: Array<Array<any>> = [];
     for (var first of arr1) {
       for (var second of arr2) {
@@ -35,13 +35,17 @@ module Base {
     return res;
   }
 
-  export function compare(first: any, second: any):ComparisonResult {
+  export function compare(first: any, second: any): ComparisonResult {
     if (first < second) {
       return ComparisonResult.LESS_THAN;
     } else if (first > second) {
       return ComparisonResult.GREATER_THAN;
     }
     return ComparisonResult.EQUAL;
+  }
+
+  export interface Copyable {
+    copy(): Copyable;
   }
 
   export function objEquals<T>(

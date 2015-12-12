@@ -1,5 +1,6 @@
 /// <reference path='operation.ts' />
 /// <reference path='../char/model.ts' />
+/// <reference path='../../base/deque.ts' />
 
 module Grove {
   function traverse(node: Node, pre: (node: Node) => void, post: (node: Node) => void): void {
@@ -48,6 +49,24 @@ module Grove {
       }
 
       return node;
+    }
+
+    shallowCopy(): Node {
+      let copy = new Node(this._id);
+      copy._type = this._type;
+      copy._propertyByKey = {};
+      for (var key in this._propertyByKey) {
+        copy._propertyByKey[key] = this._propertyByKey[key].copy();
+      }
+      return copy;
+    }
+
+    copyWithChildren(): Node {
+      let thisCopy = this.shallowCopy();
+      for (var child of this._children) {
+        thisCopy.addChild(child.copyWithChildren());
+      }
+      return thisCopy;
     }
 
     setId(id: string) { this._id = id; }
@@ -121,6 +140,20 @@ module Grove {
       return this._roots[Model.ROOT_ID];
     }
 
+    public copy(): Model {
+      let roots: { [id: string]: Node } = {};
+      for (var key in this._roots) {
+        roots[key] = this._roots[key].copyWithChildren();
+      }
+      return new Model(roots);
+    }
+
+    // Checks if the root trees are equal
+    public rootsEqual(other: Model): boolean {
+      let valEquals = (a: Node, b: Node) => { return a.subtreeEquals(b); }
+      return this._roots[Model.ROOT_ID].subtreeEquals(other._roots[Model.ROOT_ID]);
+    }
+
     // Compares the models as ordered trees of property objects
     public equals(other: Model): boolean {
       let valEquals = (a: Node, b: Node) => { return a.subtreeEquals(b); }
@@ -166,7 +199,7 @@ module Grove {
       return null;
     }
 
-    private nodeAtAddress(address: Address): Node {
+    public nodeAtAddress(address: Address): Node {
       if (!(address.id() in this._roots)) {
         fail('Missing node with name ' + address.id() + ' in roots ' + JSON.stringify(this._roots));
       }
@@ -187,8 +220,8 @@ module Grove {
         return;
       }
 
-      let nodeAtAddr = this.nodeAtAddress(op.address());
-      if (!nodeAtAddr) {
+      let parentNode = this.nodeAtAddress(op.address());
+      if (!parentNode) {
         fail('Missing parent node!');
       }
 
@@ -202,11 +235,11 @@ module Grove {
         } else {
           node = new Node(null);
         }
-        nodeAtAddr.insertChildAtIndex(node, op.index());
+        parentNode.insertChildAtIndex(node, op.index());
       }
 
       else if (op.isDelete()) {
-        let removed = nodeAtAddr.removeChildAtIndex(op.index());
+        let removed = parentNode.removeChildAtIndex(op.index());
         removed.setId(op.targetId());
         if (op.targetId() in this._roots) {
           fail("This shouldnt' happen!");
@@ -215,12 +248,33 @@ module Grove {
       }
 
       else if (op.isUpdate()) {
-        nodeAtAddr.modelForKey(op.key()).execute(op.textOp());
+        parentNode.modelForKey(op.key()).execute(op.textOp());
       }
 
       else {
         fail('Unrecognized OperationType + ', op.readableType());
       }
+    }
+
+    public addressesInSubtree(addr: Address): Array<Address> {
+      let toProcess = new Deque<Address>([addr.copy()]);
+      let res: Array<Address> = [];
+
+      while (!toProcess.isEmpty()) {
+        // pop the next node to process and append it to our output
+        let parentAddr = toProcess.popFront();
+        res.push(parentAddr);
+
+        // Walk through the node's children. Add each of its addresses
+        // and push it onto toProcess.
+        let node = this.nodeAtAddress(parentAddr);
+        for (var i = 0; i < node.children().length; i++) {
+          let childAddr = parentAddr.copy();
+          childAddr.setPath(childAddr.path().concat([i]));
+          toProcess.pushBack(childAddr);
+        }
+      }
+      return res;
     }
 
     // helpers that operate on nodes at a particular path
