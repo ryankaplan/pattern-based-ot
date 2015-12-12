@@ -18,7 +18,7 @@ function symmetricListTransform(op: OperationBase.Operation, list: Array<Operati
 interface OTClientTransport {
   connect(
     documentId: string,
-    
+
     handleSiteId: (siteId: string) => void,
     handleConnectedClients:(connectedClients: Array<string>) => void,
     handleRemoteOp: (op: OperationBase.Operation) => void,
@@ -42,7 +42,7 @@ class OTClient {
   private _siteId: string = '-1';
 
   // Generates ids for operations generated at this client.
-  private _siteOpIdGen = new Base.IDGenerator();
+  private _siteOpIdGen = new Base.NumberIdGenerator();
 
   // Always keeps track of the last total ordering id of a REMOTE operation
   // that we've seen from the server.
@@ -161,7 +161,7 @@ class OTClient {
       ) {
       path.popFront();
     }
-    
+
     // Split the remainder of the path into two arrays: l1 and l2. These are named to match the
     // paper cited in the README. The meanings of l1 and l2 are explained in the loop.
     var l1: Array<OperationBase.Operation> = [];

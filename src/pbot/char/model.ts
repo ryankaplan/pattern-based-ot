@@ -15,6 +15,10 @@ module Char {
       return this._chars.join('');
     }
 
+    public equals(other: Model): boolean {
+      return this.render() === other.render();
+    }
+
     public execute(op_: OperationBase.Operation):void {
       let op = <Operation>op_;
 

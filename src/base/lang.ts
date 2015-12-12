@@ -9,6 +9,16 @@ module Base {
 
   export var ALPHA_NUMERIC = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+  export class NumberIdGenerator {
+    constructor(private _counter:number = -1) {
+    }
+
+    next(): number {
+      this._counter += 1;
+      return this._counter;
+    }
+  }
+
   export enum ComparisonResult {
     GREATER_THAN,
     EQUAL,
@@ -34,13 +44,22 @@ module Base {
     return ComparisonResult.EQUAL;
   }
 
-  export class IDGenerator {
-    constructor(private _counter:number = -1) {
-    }
+  export function objEquals<T>(
+    a: { [key: string]: T },
+    b: { [key: string]: T },
+    eq: (a: T, b: T) => boolean): boolean
+  {
+      let aKeys = Object.keys(a);
+      let bKeys = Object.keys(b);
+      if (!listEqual(aKeys, bKeys)) {
+        return false;
+      }
 
-    next():number {
-      this._counter += 1;
-      return this._counter;
-    }
+      for (var key in a) {
+        if (!eq(a[key], b[key])) {
+          return false;
+        }
+      }
+      return true;
   }
 }

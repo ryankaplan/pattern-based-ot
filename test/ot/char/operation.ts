@@ -30,11 +30,11 @@ module Char {
       // Test transforming ops against each other
       site1 = {
         id: 1,
-        idGen: new Base.IDGenerator()
+        idGen: new Base.NumberIdGenerator()
       };
       site2 = {
         id: 2,
-        idGen: new Base.IDGenerator()
+        idGen: new Base.NumberIdGenerator()
       };
     });
 

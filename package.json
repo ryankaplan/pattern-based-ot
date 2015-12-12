@@ -4,10 +4,12 @@
   "description": "client and server for real-time document collaboration based on pattern-based operational transform",
   "dependencies": {
     "express": "^4.10.2",
+    "ws": "latest"
+  },
+  "devDependencies": {
     "jake": "latest",
     "nodemon": "latest",
     "mocha": "latest",
-    "typescript": "^1.7",
-    "ws": "latest"
+    "typescript": "^1.7"
   }
 }

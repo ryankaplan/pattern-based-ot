@@ -28,12 +28,55 @@ module Grove {
     private _type: NodeType = NodeType.TEXT;
 
     // Start out with empty text
-    private _modelByKey: { [key: string]: Char.Model } = {};
+    private _propertyByKey: { [key: string]: Char.Model } = {};
 
-    constructor(private _name: string = null) {}
+    constructor(private _id: string = null) {}
 
-    setName(name: string) { this._name = name; }
-    name(): string { return this._name; }
+    static fromJson(json: any): Node {
+      let id = ('id' in json ? json['id'] : null);
+      let children = ('children' in json ? json['children'] : []);
+      let properties = ('properties' in json ? json['properties'] : {});
+
+      let node = new Node(id);
+      for (var childJson of children) {
+        node.addChild(Node.fromJson(childJson));
+      }
+
+      for (var key in properties) {
+        assert(typeof properties[key] == 'string');
+        node._propertyByKey[key] = new Char.Model(properties[key]);
+      }
+
+      return node;
+    }
+
+    setId(id: string) { this._id = id; }
+    id(): string { return this._id; }
+
+    equalProperties(other: Node): boolean {
+      let valEquals = (a: Char.Model, b: Char.Model) => {
+        return a.equals(b);
+      }
+      return Base.objEquals(this._propertyByKey, other._propertyByKey, valEquals);
+    }
+
+    subtreeEquals(other: Node): boolean {
+      if (!this.equalProperties(other)) {
+        return false;
+      }
+
+      if (this._children.length !== other._children.length) {
+        return false;
+      }
+
+      for (var i = 0; i < this._children.length; i++) {
+        if (!this._children[i].equalProperties(other._children[i])) {
+          return false;
+        }
+      }
+
+      return true;
+    }
 
     children() { return this._children; }
     insertChildAtIndex(node: Node, index: number) { insertAtIndex(this._children, node, index); }
@@ -43,10 +86,10 @@ module Grove {
     removeChild(node: Node) { removeElement(this._children, node); }
 
     modelForKey(key: string): Char.Model {
-      if (!(key in this._modelByKey)) {
-        this._modelByKey[key] = new Char.Model('');
+      if (!(key in this._propertyByKey)) {
+        this._propertyByKey[key] = new Char.Model('');
       }
-      return this._modelByKey[key];
+      return this._propertyByKey[key];
     }
   }
 
@@ -54,24 +97,41 @@ module Grove {
 
   export class Model implements OperationBase.Model {
     // TODO(ryan): somehow exclude this from possible generated node names
-    static ROOT_KEY: string = '__ROOT__';
+    static ROOT_ID: string = '__root__';
 
     constructor(
       private _roots: { [name: string]: Node } = {}
     ) {
-      let node = new Node(Model.ROOT_KEY);
-      this._roots[node.name()] = node;
+      if (!(Model.ROOT_ID in this._roots)) {
+        let node = new Node(Model.ROOT_ID);
+        this._roots[node.id()] = node;
+      }
+    }
+
+    static fromJson(json: Array<any>): Model {
+      let roots: { [key: string]: Node } = {};
+      for (var jsonNode of json) {
+        let node = Node.fromJson(jsonNode);
+        roots[node.id()] = node;
+      }
+      return new Model(roots);
     }
 
     public documentRootNode() {
-      return this._roots[Model.ROOT_KEY];
+      return this._roots[Model.ROOT_ID];
+    }
+
+    // Compares the models as ordered trees of property objects
+    public equals(other: Model): boolean {
+      let valEquals = (a: Node, b: Node) => { return a.subtreeEquals(b); }
+      return Base.objEquals(this._roots, other._roots, valEquals);
     }
 
     public render(): string {
       var result: Array<string> = [];
 
       traverse(
-        this._roots[Model.ROOT_KEY],
+        this._roots[Model.ROOT_ID],
 
         // pre
         (node: Node) => {
@@ -147,7 +207,7 @@ module Grove {
 
       else if (op.isDelete()) {
         let removed = nodeAtAddr.removeChildAtIndex(op.index());
-        removed.setName(op.targetId());
+        removed.setId(op.targetId());
         if (op.targetId() in this._roots) {
           fail("This shouldnt' happen!");
         }
@@ -160,6 +220,73 @@ module Grove {
 
       else {
         fail('Unrecognized GroveOpType + ', op.readableType());
+      }
+    }
+
+    // helpers that operate on nodes at a particular path
+
+    public addChild(path: Array<number>, nodeValues: { [key: string]: string }) {
+      let index = path[path.length - 1];
+      let parentPath = path.slice(0, path.length - 1);
+
+      var parentAddr = new Address(GroveModel.ROOT_ID, parentPath);
+      var op = GroveOp.Insert(parentAddr, index, null, NodeType.TEXT);
+      this.execute(op);
+
+      let childAddr = new Address(GroveModel.ROOT_ID, parentPath.concat([index]));
+
+      for (var key in nodeValues) {
+        let value = nodeValues[key];
+
+        for (var i = 0; i < value.length; i++) {
+          op = GroveOp.Update(childAddr, key, Char.Operation.Insert(value[i], i));
+          this.execute(op);
+        }
+      }
+    }
+
+    public removeChild(path: Array<number>): string {
+      let index = path[path.length - 1];
+      let parentPath = path.slice(0, path.length - 1);
+
+      var parentAddr = new Address(GroveModel.ROOT_ID, parentPath);
+
+      var newId: string = null;
+      while (true) {
+        newId = Base.randomString(6, Base.ALPHA_NUMERIC);
+        if (newId in this._roots) {
+          continue;
+        } else {
+          break;
+        }
+      }
+
+      let targetId = newId;
+      let op = GroveOp.Delete(parentAddr, index, targetId);
+      this.execute(op);
+
+      return targetId;
+    }
+
+    public updateChild(path: Array<number>, nodeValues: { [key: string]: string }) {
+      let index = path[path.length - 1];
+      let parentPath = path.slice(0, path.length - 1);
+      var op: Grove.Operation = null;
+      let nodeAddr = new Address(GroveModel.ROOT_ID, path);
+
+      for (var key in nodeValues) {
+        // Delete the current value
+        let currentValue = this.nodeValueForKey(nodeAddr, key);
+        for (var i = 0; i < currentValue.length; i++) {
+          op = GroveOp.Update(nodeAddr, key, Char.Operation.Delete(0));
+          this.execute(op);
+        }
+
+        let value = nodeValues[key];
+        for (var i = 0; i < value.length; i++) {
+          op = GroveOp.Update(nodeAddr, key, Char.Operation.Insert(value[i], i));
+          this.execute(op);
+        }
       }
     }
   }

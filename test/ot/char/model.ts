@@ -5,7 +5,14 @@
 /// <reference path='../../test.ts' />
 
 module Char {
-  describe('Execute text ops', () => {
+  describe('Char.Model', () => {
+    it('equality', () => {
+      assert((new Char.Model('abcde').equals(new Char.Model('abcde'))));
+      assert(!(new Char.Model('abcd').equals(new Char.Model('abcde'))));
+      assert(!(new Char.Model('').equals(new Char.Model('abcde'))));
+      assert((new Char.Model('').equals(new Char.Model(''))));
+    });
+
     it('should work TODO(ryan)', () => {
       // Test executing text operations on a document
       let ops = [
