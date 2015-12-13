@@ -2,11 +2,12 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Test",
+			"name": "Mocha Tests",
 			"type": "node",
 			"request": "launch",
 			"program": "./node_modules/mocha/bin/_mocha",
 			"stopOnEntry": false,
+
 			// timeout of 10000 seconds for debugging
 			"args": ["build/test/test.js", "-t", "10000000"],
 			"cwd": ".",
@@ -14,8 +15,8 @@
 				"NODE_ENV": "development"
 			},
 			"externalConsole": false,
-			"sourceMaps": false,
-			"outDir": null
+			"sourceMaps": true,
+			"outDir": "test/"
 		},
 		{
 			"name": "Attach",
