@@ -2,6 +2,12 @@
 	// Controls the rendering size of tabs in characters. Accepted values: "auto", 2, 4, 6, etc. If set to "auto", the value will be guessed when a file is opened.
 	"editor.tabSize": 2,
 
-	// Controls if the editor will insert spaces for tabs. Accepted values:  "auto", true, false. If set to "auto", the value will be guessed when a file is opened.
-	"editor.insertSpaces": true
+	// JS lint
+	"javascript.validate.lint.comparisonOperatorsNotStrict": "error",
+	"javascript.validate.lint.missingSemicolon": "error",
+	"javascript.validate.lint.unusedFunctions": "warning",
+	"javascript.validate.lint.unknownProperty": "error",
+
+	// TS
+	"typescript.useCodeSnippetsOnMethodSuggest": true
 }

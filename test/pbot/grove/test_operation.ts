@@ -60,43 +60,65 @@ module Grove {
 
 
     describe('CP1 on every pair of Grove Ops on a small tree', () => {
-      let model = Model.fromJson([{
-        id: Model.ROOT_ID,
-        properties: { tag: 'a' },
-        children: [
-          { properties: { tag: 'a', content: 'blah' } },
-          { properties: { tag: 'table' } },
-          { properties: { tag: 'img' } }
-        ]
-      }]);
+      let models = [
+        Model.fromJson([{
+          id: Model.ROOT_ID,
+          properties: { tag: 'a' },
+        }]),
+
+        Model.fromJson([{
+          id: Model.ROOT_ID,
+          properties: { tag: 'a' },
+          children: [
+            { properties: { tag: 'a', content: 'blah' } },
+          ]
+        }]),
+
+        Model.fromJson([{
+          id: Model.ROOT_ID,
+          properties: { tag: 'a' },
+          children: [
+            { properties: { tag: 'a', content: 'blah' } },
+            { properties: { tag: 'table' } },
+          ]
+        }]),
+
+        Model.fromJson([{
+          id: Model.ROOT_ID,
+          properties: { tag: 'a' },
+          children: [
+            { properties: { tag: 'a', content: 'blah' } },
+            { properties: { tag: 'table' } },
+            { properties: { tag: 'img' } }
+          ]
+        }])
+      ];
 
       let modelEq = (a: Model, b: Model) => {
         return a.rootsEqual(b);
       };
 
-      it('shouldnt fail for inserts vs. inserts', () => {
-        var pairs = Base.allPairs(allInserts(model, site1), allInserts(model, site2));
-        for (var [op1, op2] of pairs) {
-          validateCP1(op1, op2, model, modelEq);
-        }
-      });
+      it('shouldnt fail CP1 validation', () => {
+        for (var model of models) {
+          var pairs = Base.allPairs(allInserts(model, site1), allInserts(model, site2));
+          for (var [op1, op2] of pairs) {
+            validateCP1(op1, op2, model, modelEq);
+          }
 
-      it('shouldnt fail for inserts vs. deletes', () => {
-        var pairs = Base.allPairs(allInserts(model, site1), allDeletes(model, site2));
-        for (var [op1, op2] of pairs) {
-          validateCP1(op1, op2, model, modelEq);
-        }
-      });
-      it('shouldnt fail for deletes vs. inserts', () => {
-        var pairs = Base.allPairs(allDeletes(model, site1), allInserts(model, site2));
-        for (var [op1, op2] of pairs) {
-          validateCP1(op1, op2, model, modelEq);
-        }
-      });
-      it('shouldnt fail for deletes vs. deletes', () => {
-        var pairs = Base.allPairs(allDeletes(model, site1), allDeletes(model, site2));
-        for (var [op1, op2] of pairs) {
-          validateCP1(op1, op2, model, modelEq);
+          var pairs = Base.allPairs(allInserts(model, site1), allDeletes(model, site2));
+          for (var [op1, op2] of pairs) {
+            validateCP1(op1, op2, model, modelEq);
+          }
+
+          var pairs = Base.allPairs(allDeletes(model, site1), allInserts(model, site2));
+          for (var [op1, op2] of pairs) {
+            validateCP1(op1, op2, model, modelEq);
+          }
+
+          var pairs = Base.allPairs(allDeletes(model, site1), allDeletes(model, site2));
+          for (var [op1, op2] of pairs) {
+            validateCP1(op1, op2, model, modelEq);
+          }
         }
       });
     });
