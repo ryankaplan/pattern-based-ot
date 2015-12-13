@@ -6,7 +6,6 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "out": "build/demos/collaborative-text-editor/static/js/client.js",
         "sourceMap": true
     },
     "files": [

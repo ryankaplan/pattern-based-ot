@@ -50,7 +50,7 @@ To get started:
 - Install npm by downloading and installing node.js from here: https://nodejs.org/en/
 - Clone the repo and navigate to it in a terminal. Run `npm install`
 - In one terminal window run `jake demo && jake watch`
-- In another terminal window run `$(npm bin)/nodemon build/demos/collaborative-text-editor/server.js`
+- In another terminal window run `$(npm bin)/nodemon build/demos/server.js`
 - Visit `http://localhost:3000/` in a browser. This will navigate to a URL with a random documentId.
 - Copy paste the URL from this tab into another tab and type away!
 

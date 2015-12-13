@@ -6,7 +6,6 @@
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "out": "build/test/test.js",
         "sourceMap": true
     },
     "files": [
