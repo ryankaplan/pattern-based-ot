@@ -58,7 +58,9 @@ let binding = new CollaborativeTextAreaBinding(documentId, textArea);
 If you want to get notified when the document has loaded, or every time it has
 incorporated remote changes, you can do:
 
-```binding.client().addListener(yourListener);```
+```
+binding.client().addListener(yourListener);
+```
 
 For a working example of a text-editor application, check out the demo in
 `src/demos/collaborative-text-editor`.
