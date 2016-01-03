@@ -36,8 +36,39 @@ to be a production-ready library. For example:
 That said, I plan to keep working on this so it'll get better over time. Maybe at
 some point it'll be useful to someone other than me.
 
-There's a demo illustrating how to use the library in
-`src/demos/collaborative-text-editor`.
+As an example, you might use pbot to create a collaborative text-editing application.
+Here's how you might set up the server with node, express and ws:
+
+```
+// Standard express setup
+let express = require('express');
+let app = express();
+let httpServer = require('http').Server(app);
+httpServer.listen(3000, function () { console.log('listening on port 3000'); });
+
+// Standard ws setup
+let ws = require('ws');
+let WebSocketServer = ws.Server;
+let wss = new WebSocketServer({ server: httpServer });
+
+let otServer: OTServer = new OTServer();
+
+// Whenever ws gets a new websocket connection, tell otServer about it.
+wss.on('connection', (ws: any) => {
+  connectServerSocket(otServer, <IWebSocket>ws);
+});
+```
+
+And on the client:
+
+```
+let textArea = //... a textarea DOM element
+let binding = new CollaborativeTextAreaBinding(documentId, textArea);
+```
+
+and then `_binding.client().addListener(yourListener);` if you want to get
+updates on when the document has loaded. For a working example of a text-editor
+application, check out the demo in  `src/demos/collaborative-text-editor`.
 
 Here's a gif of the demo in action:
 
