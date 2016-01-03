@@ -1,7 +1,7 @@
-/// <reference path='../../../pbot/messages.ts' />
-/// <reference path='../../../pbot/ot_server.ts' />
-/// <reference path='../../../pbot/typings/node/node.d.ts' />
-/// <reference path='../../../pbot/typings/ws/ws.d.ts' />
+/// <reference path='../../pbot/messages.ts' />
+/// <reference path='../../pbot/ot_server.ts' />
+/// <reference path='../../pbot/typings/node/node.d.ts' />
+/// <reference path='../../pbot/typings/ws/ws.d.ts' />
 
 let ws = require('ws');
 let WebSocketServer = ws.Server;
@@ -15,15 +15,21 @@ let port = 3000;
 // Serve data out of /static.
 app.use(express.static(__dirname + '/static'));
 
-// When a user visits the server at /, direct them to a new collaborative document
-// with a random documentId
 app.get('/', function (req: any, res: any) {
   res.writeHead(302, {
-    'Location': '/html/index.html?documentId=' + Base.randomString(6, Base.ALPHA_NUMERIC)
+    'Location': '/html/index.html'
   });
   res.end();
 });
 
+// When a user visits the server at /, direct them to a new collaborative document
+// with a random documentId
+app.get('/newTextDocument', function (req: any, res: any) {
+  res.writeHead(302, {
+    'Location': '/html/textDemo/index.html?documentId=' + Base.randomString(6, Base.ALPHA_NUMERIC)
+  });
+  res.end();
+});
 
 httpServer.listen(port, function () { console.log('listening on *:' + port); });
 

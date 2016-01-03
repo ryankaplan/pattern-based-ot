@@ -9,13 +9,6 @@
         "sourceMap": true
     },
     "files": [
-        "pbot/test_control.ts",
-
-        "pbot/char/test_model.ts",
-        "pbot/char/test_operation.ts",
-
-        "pbot/grove/test_address.ts",
-        "pbot/grove/test_model.ts",
-        "pbot/grove/test_operation.ts"
+        "client.ts"
     ]
 }

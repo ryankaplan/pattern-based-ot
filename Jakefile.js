@@ -5,45 +5,96 @@ task('default', function (params) {
   console.log('This is the default task.');
 });
 
-// Root folder for all build products
-var DIR_BUILD = 'build';
+// Declare build product info
+var buildDir = 'build';
+var testDir = 'test';
+var srcDir = 'src';
 
-// Root folder for collaborative text editor demo build products
-var DIR_BUILD_DEMO = path.join(DIR_BUILD, 'demos', 'collaborative-text-editor');
+var targets = {
+  // Output a test.js file which runs all of our tests
+  'test': {
+    buildDir: path.join(buildDir, 'test'),
+    tsProducts: {
+      test: {
+        tsConfig: testDir,
+        out: path.join(buildDir, 'test', 'test.js')
+      }
+    }
+  },
 
-// Root folder for test build products
-var DIR_BUILD_TEST = path.join(DIR_BUILD, 'test');
+  // Output a directory that lets a user browse and play with
+  // demos that use the pbot library
+  'demos': {
+    buildDir: path.join(buildDir, 'demos'),
+    staticDir: path.join(srcDir, 'demos', 'static'),
+    tsProducts: {
+      textDemoClient: {
+        tsConfig: path.join(srcDir, 'demos', 'textDemoClient'),
+        out: path.join(buildDir, 'demos', 'static', 'js', 'textDemoClient.js')
+      },
 
-directory(DIR_BUILD_DEMO);
-directory(DIR_BUILD_TEST);
+/*
+      shapesDemoClient: {
+        tsConfig: path.join(srcDir, 'demos', 'shapes', 'shapesDemoClient'),
+        out: path.join(buildDir, 'demos', 'shapes', 'static', 'js', 'shapesDemoClient.js')
+      },
+*/
+      server: {
+        tsConfig: path.join(srcDir, 'demos', 'server'),
+        out: path.join(buildDir, 'demos', 'server.js')
+      }
+    }
+  }
+};
 
-// Moves static files to the right place for the demo
-task('copy-static', [DIR_BUILD_DEMO], function () {
-  jake.cpR('src/demos/collaborative-text-editor/static', DIR_BUILD_DEMO);
+function tsCompileCmd(tsProduct) {
+  return '$(npm bin)/tsc -p ' + tsProduct['tsConfig'] + ' --out ' + tsProduct['out'];
+}
+
+function compileTsProduct(tsProduct, done) {
+  jake.exec(
+    tsCompileCmd(tsProduct),
+    { printStdout: true },
+    done
+  );
+}
+
+////////// demo tasks  //////////
+
+var buildDir = targets['demos']['buildDir'];
+directory(buildDir);
+
+desc('Build a website for viewing and playing with pbot demos');
+task('demos', [buildDir], function () {
+  var target = targets['demos'];
+
+  jake.cpR(target['staticDir'], buildDir);
+
+  compileTsProduct(target['tsProducts']['textDemoClient'], function () {
+    compileTsProduct(target['tsProducts']['server'], complete);
+  });
 });
 
-// Builds demo server, moves it to the build folder
-task('server', [DIR_BUILD_DEMO], function (complete) {
-  jake.exec('$(npm bin)/tsc -p src/demos/collaborative-text-editor/server', {printStdout: true}, complete);
-});
+////////// watch task  //////////
 
-desc('Build collaborative text demo')
-task('demo', ['copy-static', 'server'], function (complete) {
-  jake.exec('$(npm bin)/tsc -p src/demos/collaborative-text-editor/client', {printStdout: true}, complete);
-});
-
-desc('Watch and build the collaborative text demo')
-watchTask(['demo'], function () {
+desc('Watch and build the collaborative text demo');
+watchTask(['demos'], function () {
   this.watchFiles.include([
-    './**/*.ts'
+    './**/*.ts',
+    './**/*.html',
+    '.**/*.css'
   ]);
 });
 
+////////// test tasks  //////////
+
 desc('Compile and run all tests');
-task('test', [DIR_BUILD_TEST], function () {
-  var output = path.join(DIR_BUILD_TEST, 'test.js');
-  jake.exec('$(npm bin)/tsc -p test', {printStdout: true}, function () {
-    jake.exec('$(npm bin)/mocha ' + output, {printStdout: true}, function () {
+task('test', [buildDir], function () {
+  var target = targets['test'];
+  var product = target['tsProducts']['test'];
+
+  compileTsProduct(product, function () {
+    jake.exec('$(npm bin)/mocha ' + product['out'], { printStdout: true }, function () {
       console.log('Done running tests');
       complete();
     });

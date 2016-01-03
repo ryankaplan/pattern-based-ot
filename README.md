@@ -2,8 +2,7 @@
 
 This project is a server and client for the Pattern-based Operational
 Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html).
-This implementation is published with permission from one of the
-authors - Prof. Sun.
+It's published with the author's permission.
 
 I'm building this project for fun -- I want to better understand OT. And
 implementing an OT algorithm seemed like a good start. It's not a library
@@ -23,20 +22,45 @@ to the Google Wave OT algorithm which waits for outbound ops to come back before
 sending more. This helps performance and avoids a complex client/network state
 machine.
 
-# This implementation
+CAVEAT: this is a toy project/WIP. All server state is stored in memory, it doesn't
+handle client disconnects/reconnects, it doesn't have great test coverage, etc.
+I advise against using any of this as production code.
 
-There aren't any known bugs in the OT code but, again, this is *not* built
-to be a production-ready library. For example:
+# Demos
 
-- all state is stored in memory; when the server restarts, all your data goes away
-- it doesn't support undo/redo
-- doesn't handle client disconnects/reconnects well
-- it doesn't have great test coverage (yet)
+As an example, you might use pbot to create a collaborative text-editing application.
+Here's how you might set up the server with node, express and ws:
 
-That said, I plan to keep working on this so it'll get better over time. Maybe at
-some point it'll be useful to someone other than me.
+```
+// Standard express setup
+let express = require('express');
+let app = express();
+let httpServer = require('http').Server(app);
+httpServer.listen(3000, function () { console.log('listening on port 3000'); });
 
-There's a demo illustrating how to use the library in
+// Standard ws setup
+let ws = require('ws');
+let WebSocketServer = ws.Server;
+let wss = new WebSocketServer({ server: httpServer });
+
+// PBOT setup
+let otServer: OTServer = new OTServer();
+wss.on('connection', (ws: any) => { connectServerSocket(otServer, <IWebSocket>ws); });
+```
+
+And here's how to set up the client:
+
+```
+let textArea = document.getElementById('yourTextAreaId');
+let binding = new CollaborativeTextAreaBinding(documentId, textArea);
+```
+
+If you want to get notified when the document has loaded, or every time it has
+incorporated remote changes, you can do:
+
+```binding.client().addListener(yourListener);```
+
+For a working example of a text-editor application, check out the demo in
 `src/demos/collaborative-text-editor`.
 
 Here's a gif of the demo in action:
@@ -49,8 +73,8 @@ To get started:
 
 - Install npm by downloading and installing node.js from here: https://nodejs.org/en/
 - Clone the repo and navigate to it in a terminal. Run `npm install`
-- In one terminal window run `jake demo && jake watch`
-- In another terminal window run `$(npm bin)/nodemon build/demos/collaborative-text-editor/server.js`
+- In one terminal window run `jake demos && jake watch`
+- In another terminal window run `$(npm bin)/nodemon build/demos/server.js`
 - Visit `http://localhost:3000/` in a browser. This will navigate to a URL with a random documentId.
 - Copy paste the URL from this tab into another tab and type away!
 
