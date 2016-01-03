@@ -80,7 +80,9 @@ task('demos', [buildDir], function () {
 desc('Watch and build the collaborative text demo');
 watchTask(['demos'], function () {
   this.watchFiles.include([
-    './**/*.ts'
+    './**/*.ts',
+    './**/*.html',
+    '.**/*.css'
   ]);
 });
 

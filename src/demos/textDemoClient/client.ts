@@ -14,63 +14,54 @@
 // operation
 //
 
+
 /**
- * A Controller instance is tied to a textarea on the page. To make your
- * <textarea id="collab-doc" /> collaborative, just instantiate a controller
+ * A Binding instance is tied to a textarea on the page. To make your
+ * <textarea id="collab-doc" /> collaborative, just instantiate a binding
  * for it, like so:
  *
- * var controller = new Controller("#collab-doc");
+ * var binding = new CollaborativeTextAreaBinding(documentId, "#collab-doc");
  */
-class CollaborativeTextController implements OTClientListener {
+class CollaborativeTextAreaBinding implements OTClientListener {
+
   private _socket = new SocketClientTransport(new WebSocket('ws://localhost:3000/', ['pbotProtocol']));
-  private _client:OTClient = null;
+  private _client: OTClient = null;
   private _model: Char.Model = null;
 
   // jQuery wrapped div of the textarea that we're watching
-  private _textArea: any;
-  private _loadingMessage: any;
-  private _lastKnownDocumentContent: string;
+  private _lastKnownDocumentContent: string = '';
 
-  constructor(textAreaSelector: string, loadingElementSelector: string) {
-    this._textArea = $(textAreaSelector);
-    this._loadingMessage = $(loadingElementSelector);
-    this._lastKnownDocumentContent = "";
-
-    // Re-shown when we're connected
-    this._loadingMessage.show();
-    this._textArea.hide();
-
+  constructor(private _documentId: string, private _elt: any) {
     this._model = new Char.Model('');
-
-    let documentId = getDocumentQueryArg('documentId');
-    this._client = new OTClient(this._socket, documentId, this._model);
+    this._client = new OTClient(this._socket, this._documentId, this._model);
     this._client.addListener(this);
     this._client.connect();
   }
 
-  // OTClientDelegate implementation
+  elt(): any { return this._elt; }
+  client(): OTClient { return this._client; }
+
+  // OTClientListener implementation
 
   clientDidConnectToDocument() {
-    this._loadingMessage.hide();
-    this._textArea.show();
+    this._elt.contentEditable = true;
 
-    this._textArea.attr("contentEditable", "true");
     let documentContent = this._model.render();
-    this._textArea.val(documentContent);
-    this._lastKnownDocumentContent = this._textArea.val();
-    this._textArea.bind('input propertychange', this.handleTextAreaChangeEvent.bind(this));
+    this._elt.value = documentContent;
+    this._lastKnownDocumentContent = this._elt.value;
+    this._elt.addEventListener('input', this.handleTextAreaChangeEvent.bind(this), false);
   }
 
   clientDidHandleRemoteOps(model: OperationBase.Model) {
     let textModel: Char.Model = <Char.Model>model;
     this._lastKnownDocumentContent = textModel.render();
-    this._textArea.val(this._lastKnownDocumentContent);
+    this._elt.value = this._lastKnownDocumentContent;
   }
 
   // UI helpers
 
   private handleTextAreaChangeEvent() {
-    var newText = this._textArea.val();
+    var newText = this._elt.value;
     if (newText == this._lastKnownDocumentContent) {
       debugLog("Returning early; nothing to sync!");
       return;
@@ -121,9 +112,44 @@ class CollaborativeTextController implements OTClientListener {
       this._client.handleLocalOp(textOp);
     }
   }
+
 }
 
-var pageController:CollaborativeTextController = null;
+
+class CollaborativeTextController implements OTClientListener {
+
+  private _binding: CollaborativeTextAreaBinding = null;
+
+  // textarea DOM element
+  private _textArea: any;
+
+  // div DOM element
+  private _loadingLabel: any;
+
+  constructor(documentId: string, textAreaId: string, loadingElementId: string) {
+    this._textArea = document.getElementById(textAreaId);
+    this._loadingLabel = document.getElementById(loadingElementId);
+
+    // Re-shown when we're connected
+    this._textArea.style.display = 'none';
+
+    this._binding = new CollaborativeTextAreaBinding(documentId, this._textArea);
+    this._binding.client().addListener(this);
+  }
+
+  // OTClientListener implementation
+
+  clientDidConnectToDocument() {
+    this._loadingLabel.style.display = 'none';
+    this._textArea.style.display = null;
+  }
+
+  // dummy implementation
+  clientDidHandleRemoteOps(model: OperationBase.Model) { }
+}
+
+var pageController: CollaborativeTextController = null;
 $(document).ready(function () {
-  pageController = new CollaborativeTextController("#ot-document", "#loading-message");
+  let documentId = getDocumentQueryArg('documentId');
+  pageController = new CollaborativeTextController(documentId, "ot-document", "loading-message");
 });

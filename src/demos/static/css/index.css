@@ -1,0 +1,18 @@
+html {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+
+  font-family: Helvetica;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 300;
+  text-align: center;
+
+  background-color: #fafafa;
+}

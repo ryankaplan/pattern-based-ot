@@ -37,7 +37,7 @@ interface OTClientListener {
 }
 
 class OTClient {
-  private _listeners:Array<OTClientListener> = [];
+  private _listeners: Array<OTClientListener> = [];
 
   private _siteId: string = '-1';
 
