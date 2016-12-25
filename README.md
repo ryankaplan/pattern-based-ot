@@ -3,58 +3,20 @@
 This is a server and client for a real-time collaborative document editor. It's based on the Pattern-based Operational
 Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html) and is published with the author's permission.
 
+Here's a gif of it in action:
+
+![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/demos/static/images/demo.gif?raw=true)
+
+
 I built this for fun -- I wanted to better understand OT. And implementing an OT algorithm seemed like a good start. It's not a library intended for production use. I'm making it public in case others find it interesting or the code useful.
 
-What's exciting about pattern-based OT? Two things make it cool:
+What's exciting about pattern-based OT (when compared to other OT algorithms)?
 
 1. It doesn't require any transformation of operations on the server. Most OT algorithms involve transformation work on the server which impacts scalability and means you have to write transformation code once for the server and once for the client (or use the same language on both).
 
 2. Sends local ops to the server immediately. This is in contrast, for example, to the Google Wave OT algorithm which waits for outbound ops to come back before sending more. This aids performance (slightly) and avoids a complex client/network state machine.
 
 CAVEAT: this is a prototype and was never meant to be used in production. All server state is stored in memory, it doesn't handle client disconnects/reconnects, it doesn't have great test coverage, etc.
-
-# Demos
-
-As an example, you might use pbot to create a collaborative text-editing application.
-Here's how you might set up the server with node, express and ws:
-
-```
-// Standard express setup
-let express = require('express');
-let app = express();
-let httpServer = require('http').Server(app);
-httpServer.listen(3000, function () { console.log('listening on port 3000'); });
-
-// Standard ws setup
-let ws = require('ws');
-let WebSocketServer = ws.Server;
-let wss = new WebSocketServer({ server: httpServer });
-
-// PBOT setup
-let otServer: OTServer = new OTServer();
-wss.on('connection', (ws: any) => { connectServerSocket(otServer, <IWebSocket>ws); });
-```
-
-And here's how to set up the client:
-
-```
-let textArea = document.getElementById('yourTextAreaId');
-let binding = new CollaborativeTextAreaBinding(documentId, textArea);
-```
-
-If you want to get notified when the document has loaded, or every time it has
-incorporated remote changes, you can do:
-
-```
-binding.client().addListener(yourListener);
-```
-
-For a working example of a text-editor application, check out the demo in
-`src/demos/collaborative-text-editor`.
-
-Here's a gif of the demo in action:
-
-![Gif of two documents](https://github.com/ryankaplan/pattern-based-ot/blob/master/src/demos/static/images/demo.gif?raw=true)
 
 # Development Setup
 
