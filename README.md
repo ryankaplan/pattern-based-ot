@@ -1,30 +1,17 @@
 # PBOT (Pattern Based OT)
 
-This project is a server and client for the Pattern-based Operational
-Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html).
-It's published with the author's permission.
+This is a server and client for a real-time collaborative document editor. It's based on the Pattern-based Operational
+Transform algorithm as described in [this paper](http://www.computer.org/csdl/trans/td/preprint/07060680-abs.html) and is published with the author's permission.
 
-I'm building this project for fun -- I want to better understand OT. And
-implementing an OT algorithm seemed like a good start. It's not a library
-intended for production use. I'm making it public in case others find it
-interesting or the code useful.
+I built this for fun -- I wanted to better understand OT. And implementing an OT algorithm seemed like a good start. It's not a library intended for production use. I'm making it public in case others find it interesting or the code useful.
 
-What's exciting about pattern-based OT? Here are two things that I find particularly
-cool:
+What's exciting about pattern-based OT? Two things make it cool:
 
-1. PBOT doesn't require any transformation of operations on the server. Most
-OT algorithms involve transformation work on the server which impacts
-scalability and which limits technology choices if you want to write your OT
-code only once.
+1. It doesn't require any transformation of operations on the server. Most OT algorithms involve transformation work on the server which impacts scalability and means you have to write transformation code once for the server and once for the client (or use the same language on both).
 
-2. Sends local ops to the server immediately. This is in contrast, for example,
-to the Google Wave OT algorithm which waits for outbound ops to come back before
-sending more. This helps performance and avoids a complex client/network state
-machine.
+2. Sends local ops to the server immediately. This is in contrast, for example, to the Google Wave OT algorithm which waits for outbound ops to come back before sending more. This aids performance (slightly) and avoids a complex client/network state machine.
 
-CAVEAT: this is a toy project/WIP. All server state is stored in memory, it doesn't
-handle client disconnects/reconnects, it doesn't have great test coverage, etc.
-I advise against using any of this as production code.
+CAVEAT: this is a prototype and was never meant to be used in production. All server state is stored in memory, it doesn't handle client disconnects/reconnects, it doesn't have great test coverage, etc.
 
 # Demos
 
